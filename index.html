@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Co Pilot Ops Comms – Task Decision Helper (Navigator style)</title>
+  <style>
+    :root{ --bg:#f7f7f9; --card:#ffffff; --text:#333333; --muted:#5f6368; --accent:#6c2a7c; --accent2:#c8a200; --ok:#1a7f37; --warn:#b17c00; --bad:#b00020; --border:#e6e6ea; }
+    html,body{height:100%;}
+    body{font-family:Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin:0; background:var(--bg); color:var(--text);}    
+    header{background:linear-gradient(135deg, var(--accent), #8c3ca3); color:#fff; padding:1.2rem 1.5rem; border-bottom:4px solid var(--accent2);} 
+    header h1{margin:0; font-size:1.35rem;}
+    header p{margin:.25rem 0 0; font-size:.95rem; opacity:.92;}
+    .container{max-width:1100px; margin:1rem auto 2rem; padding:0 1rem;}
+    .grid{display:grid; grid-template-columns:1fr 1fr; gap:1rem;}
+    .card{background:var(--card); padding:1rem; border-radius:.6rem; box-shadow:0 6px 18px rgba(0,0,0,.08); border:1px solid var(--border);}    
+    .card h2{margin-top:0; font-size:1.1rem;}
+    fieldset{border:1px solid var(--border); border-radius:.6rem; padding:.8rem;}
+    legend{padding:0 .5rem; color:var(--muted);}    
+    label{display:block; margin:.5rem 0 .25rem;}
+    input, select, textarea{width:100%; padding:.55rem .6rem; border:1px solid #ccc; border-radius:.4rem; font:inherit;}
+    textarea{min-height:110px;}
+    .small{font-size:.9rem; color:var(--muted);}    
+    .row{display:flex; gap:.6rem; align-items:flex-start;}
+    .row > *{flex:1;}
+    .checkgrid{display:grid; grid-template-columns:1fr 1fr; gap:.25rem .75rem; align-items:start;}
+    .checkgrid label{display:grid; grid-template-columns:20px 1fr; align-items:start; column-gap:.5rem; padding:.2rem 0;}
+    .checkgrid input{width:18px; height:18px; margin-top:.2rem;}
+    .btn{appearance:none; border:none; border-radius:.45rem; padding:.6rem .9rem; font-weight:600; cursor:pointer;}
+    .btn-primary{background:var(--accent); color:#fff; box-shadow:0 2px 6px rgba(108,42,124,.35);} 
+    .btn-secondary{background:#eee; color:#333;}
+    .btn-outline{background:transparent; border:1px solid #ccc;}
+    .pill{display:inline-flex; align-items:center; gap:.4rem; padding:.25rem .6rem; border-radius:999px; font-size:.85rem; border:1px solid var(--border);} 
+    .pill.critical{background:#fde2e4; color:#b00020;}
+    .pill.important{background:#fff3cd; color:#8a6d3b;}
+    .pill.other{background:#e2f0ff; color:#1d4e89;}
+    .decision{border-left:4px solid #ddd; padding-left:.75rem;}
+    .decision.approved{border-color:var(--ok);}    
+    .decision.review{border-color:var(--warn);}    
+    .decision.declined{border-color:var(--bad);}    
+    .decision h3{margin:.2rem 0 .6rem;}
+    .decision h3 span{font-weight:700;}
+
+    .alert-red{border-left:4px solid var(--bad); background:#fde2e4; border:1px solid #f5b7bd; color:#7a1020; padding:.6rem .8rem; border-radius:.5rem; margin:.6rem 0;}
+
+    .copy{display:flex; gap:.5rem; align-items:center;}
+    pre#summary{white-space:pre-wrap; background:#fff; border:1px solid var(--accent2); border-left-width:4px; border-radius:.6rem; padding:1rem; box-shadow:0 4px 12px rgba(0,0,0,.06); font-family:"Aptos", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;}
+    .footer{color:var(--muted); font-size:.85rem; margin-top:.6rem;}
+    .muted{color:var(--muted);} 
+    .note{border-left:4px solid var(--accent2); padding:.4rem .6rem; background:#fff9e6; border:1px solid #f3e3a0; border-radius:.4rem;} 
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Co Pilot Ops Comms – Task Decision Helper</h1>
+    <p>Navigator styling • Email for requestors • Auto deadlines • Missing‑info & weekend contact</p>
+  </header>
+
+  <div class="container">
+    <div class="grid">
+      <div class="card">
+        <h2>1) Request details</h2>
+        <label>Request title <span class="small">(e.g., "Allergy label update – Q1")</span>
+          <input id="title" placeholder="Title" />
+        </label>
+        <div class="row">
+          <label>Requester name
+            <input id="req_name" placeholder="Name" />
+          </label>
+          <label>Requester email
+            <input id="req_email" type="email" placeholder="name@whitbread.com" />
+          </label>
+        </div>
+        <label>Task wording (including actions)
+          <textarea id="desc" placeholder="Provide the task wording and clear actions sites must take." ></textarea>
+        </label>
+        
+        <fieldset>
+          <legend>Action type(s)</legend>
+          <div class="checkgrid">
+            <label><input type="checkbox" id="act_threat" /> <span>Threat to life (foreign body / allergy risk)</span></label>
+            <label><input type="checkbox" id="act_remove" /> <span>Remove & Destroy (quality issue)</span></label>
+            <label><input type="checkbox" id="act_licence" /> <span>Licence renewal</span></label>
+            <label><input type="checkbox" id="act_allergy" /> <span>Planned allergy update</span></label>
+            <label><input type="checkbox" id="act_pos" /> <span>POS display confirmation</span></label>
+            <label><input type="checkbox" id="act_project" /> <span>Project actions</span></label>
+            <label><input type="checkbox" id="act_other" /> <span>Other</span></label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Principles checks</legend>
+          <div class="checkgrid">
+            <label><input type="checkbox" id="chk_essential" /> <span>Essential to record/track safety, compliance or service quality</span></label>
+            <label><input type="checkbox" id="chk_reinforce" /> <span>Task reinforces actions & expectations (not duplicating details)</span></label>
+          </div>
+          <label>Escalation contact (named Whitbread email)
+            <input id="escalation" type="email" placeholder="firstname.lastname@whitbread.com" />
+          </label>
+          <div class="row">
+            <label>Aligned to policy / standard procedure?
+              <select id="policy">
+                <option value="yes">Yes</option>
+                <option value="unsure">Unsure – needs validation</option>
+                <option value="no">No – not aligned</option>
+              </select>
+            </label>
+            <label>Includes stock removal?
+              <select id="stock">
+                <option value="no">No</option>
+                <option value="yes">Yes</option>
+              </select>
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Schedule & deadline</legend>
+          <div class="row">
+            <label>Schedule date/time
+              <input id="schedule_dt" type="datetime-local" />
+            </label>
+            <label>Deadline date/time
+              <input id="deadline_dt" type="datetime-local" />
+            </label>
+          </div>
+          <div class="row">
+            <label>Criticality
+              <div class="checkgrid" style="grid-template-columns:1fr;">
+                <label><input type="radio" name="crit" id="crit_auto" checked /> <span>Auto (recommended)</span></label>
+                <label><input type="radio" name="crit" id="crit_critical" /> <span>Critical (4 hours)</span></label>
+                <label><input type="radio" name="crit" id="crit_important" /> <span>Important (24 hours)</span></label>
+                <label><input type="radio" name="crit" id="crit_other" /> <span>Other (>24 hours)</span></label>
+              </div>
+            </label>
+            <div>
+              <label class="row" style="align-items:center;">
+                <input type="checkbox" id="deadline_override" style="width:18px; height:18px;" />
+                <span>Allow manual deadline edit</span>
+              </label>
+              <p class="small muted">Auto sets deadline from schedule using chosen criticality.</p>
+            </div>
+          </div>
+          <p class="small">Auto picks +4h for threats to life; +24h for Remove & Destroy, Licence renewal or planned allergy updates; +72h (default) for POS / project / other. You can enable manual override.</p>
+        </fieldset>
+
+        <fieldset>
+          <legend>Completion & attachments</legend>
+          <div class="checkgrid" style="grid-template-columns:1fr;">
+            <label><input type="radio" name="who" id="who_admin" /> <span>Who can complete: Site Admin (Site Managers)</span></label>
+            <label><input type="radio" name="who" id="who_checker" /> <span>Who can complete: Compliance Checker (All other site roles)</span></label>
+          </div>
+          <label class="row" style="align-items:center;">
+            <input type="checkbox" id="site_list_attach" style="width:18px; height:18px;" />
+            <span>I will attach a site list with the request email</span>
+          </label>
+        </fieldset>
+
+        <div class="row">
+          <button class="btn btn-secondary" id="reset">Reset</button>
+          <button class="btn btn-primary" id="generate">Generate decision</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>2) Outcome</h2>
+        <div id="crit_pill" class="pill other">Criticality: Other (>24h)</div>
+        <div id="decision" class="decision review">
+          <h3><span>Decision:</span> Review required</h3>
+          <ul id="reasons"></ul>
+        </div>
+
+        <div id="weekend" class="alert-red" style="display:none;">
+          <strong>Weekend escalation:</strong> If this task is urgently required to be scheduled over the weekend you must contact one of the following: <strong>Luke Wheeler 07843814856</strong>, <strong>Mark Fewtrell 07514730845</strong>.
+        </div>
+
+        <h3>Missing information / to confirm</h3>
+        <div class="note">
+          <ul id="missing"></ul>
+        </div>
+
+        <h2>Task summary (email‑ready)</h2>
+        <div class="copy">
+          <button class="btn btn-secondary" id="copy">Copy summary</button>
+          <button class="btn btn-outline" id="download">Download .txt</button>
+        </div>
+        <pre id="summary"></pre>
+        <div class="footer">ROM will be notified automatically for missed deadlines; Risk & Compliance will support securing completion. If the task includes stock removal, recorded volumes will be returned to the requester after completion.</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+// --- Utilities ---
+function isWhitbreadEmail(email){
+  const e = email.trim();
+  if(!e) return false;
+  const named = /^[a-zA-Z]+\.[a-zA-Z]+@whitbread\.(com|co\.uk)$/i.test(e);
+  return named;
+}
+
+function anyActionSelected(){
+  return ['act_threat','act_remove','act_licence','act_allergy','act_pos','act_project','act_other']
+    .some(id => document.getElementById(id).checked);
+}
+
+function autoCriticality(){
+  const threat = document.getElementById('act_threat').checked;
+  const remove = document.getElementById('act_remove').checked;
+  const licence = document.getElementById('act_licence').checked;
+  const allergy = document.getElementById('act_allergy').checked;
+  const pos = document.getElementById('act_pos').checked;
+  const project = document.getElementById('act_project').checked;
+  const other = document.getElementById('act_other').checked;
+
+  if(threat) return 'critical';
+  if(remove || licence || allergy) return 'important';
+  if(pos || project || other) return 'other';
+  return 'other';
+}
+
+function selectedCriticality(){
+  if(document.getElementById('crit_critical').checked) return 'critical';
+  if(document.getElementById('crit_important').checked) return 'important';
+  if(document.getElementById('crit_other').checked) return 'other';
+  return 'auto';
+}
+
+function criticalityLabel(c){
+  if(c==='critical') return 'Critical (4 hours)';
+  if(c==='important') return 'Important (24 hours)';
+  return 'Other (>24 hours)';
+}
+
+function hoursFor(c){
+  if(c==='critical') return 4;
+  if(c==='important') return 24;
+  return 72; // default suggestion for other
+}
+
+function updateCritPill(c){
+  const pill = document.getElementById('crit_pill');
+  pill.classList.remove('critical','important','other');
+  pill.classList.add(c==='critical'?'critical':(c==='important'?'important':'other'));
+  pill.textContent = `Criticality: ${criticalityLabel(c)}`;
+}
+
+function toLocalInputValue(date){
+  const pad = n => String(n).padStart(2,'0');
+  const y = date.getFullYear();
+  const m = pad(date.getMonth()+1);
+  const d = pad(date.getDate());
+  const h = pad(date.getHours());
+  const min = pad(date.getMinutes());
+  return `${y}-${m}-${d}T${h}:${min}`;
+}
+
+function fromLocalInputValue(val){
+  if(!val) return null;
+  const [dpart, tpart] = val.split('T');
+  const [y,m,d] = dpart.split('-').map(Number);
+  const [hh,mm] = tpart.split(':').map(Number);
+  return new Date(y, m-1, d, hh, mm);
+}
+
+function computeDeadline(){
+  const schedVal = document.getElementById('schedule_dt').value;
+  const override = document.getElementById('deadline_override').checked;
+  const critSel = selectedCriticality();
+  const crit = (critSel==='auto') ? autoCriticality() : critSel;
+  updateCritPill(crit);
+
+  const sched = fromLocalInputValue(schedVal);
+  if(!override && sched){
+    const hrs = hoursFor(crit);
+    const deadline = new Date(sched.getTime() + hrs*60*60*1000);
+    document.getElementById('deadline_dt').value = toLocalInputValue(deadline);
+  }
+
+  // Weekend contact note (red alert under Decision)
+  const weekendEl = document.getElementById('weekend');
+  if(sched){
+    const day = sched.getDay(); // 0=Sun, 6=Sat
+    weekendEl.style.display = (day===0 || day===6) ? 'block' : 'none';
+  } else {
+    weekendEl.style.display = 'none';
+  }
+}
+
+function onCritChange(){ computeDeadline(); }
+function onScheduleChange(){ computeDeadline(); }
+
+function whoSelected(){
+  if(document.getElementById('who_admin').checked) return 'Site Admin (Site Managers)';
+  if(document.getElementById('who_checker').checked) return 'Compliance Checker (All other site roles)';
+  return null;
+}
+
+function generate(){
+  const title = document.getElementById('title').value.trim();
+  const reqName = document.getElementById('req_name').value.trim();
+  const reqEmail = document.getElementById('req_email').value.trim();
+  const desc = document.getElementById('desc').value.trim();
+  const essential = document.getElementById('chk_essential').checked;
+  const reinforce = document.getElementById('chk_reinforce').checked;
+  const escalation = document.getElementById('escalation').value.trim();
+  const policy = document.getElementById('policy').value;
+  const stock = document.getElementById('stock').value;
+
+  const schedVal = document.getElementById('schedule_dt').value;
+  const deadlineVal = document.getElementById('deadline_dt').value;
+  const override = document.getElementById('deadline_override').checked;
+
+  const who = whoSelected();
+  const siteListAttach = document.getElementById('site_list_attach').checked;
+
+  let critSel = selectedCriticality();
+  let crit = (critSel==='auto') ? autoCriticality() : critSel;
+  updateCritPill(crit);
+
+  const sched = fromLocalInputValue(schedVal);
+  const deadline = fromLocalInputValue(deadlineVal);
+
+  // decision logic
+  let reasons = [];
+  let decision = 'review';
+
+  // Core purpose gates: either unticked => Declined
+  if(!essential){
+    decision = 'declined';
+    reasons.push('Core principle missing: not essential to record/track safety, compliance, or service quality.');
+  }
+  if(!reinforce){
+    decision = 'declined';
+    reasons.push('Core principle missing: task does not reinforce actions & expectations / duplicates comms details.');
+  }
+
+  if(!isWhitbreadEmail(escalation)){
+    if(decision!=='declined') decision = 'review';
+    reasons.push('Escalation contact must be a named Whitbread email.');
+  }
+
+  if(policy==='no'){
+    decision = 'declined';
+    reasons.push('Action not aligned to policy/standard procedure. Validate before sending.');
+  }
+  if(policy==='unsure'){
+    if(decision!=='declined') decision = 'review';
+    reasons.push('Policy alignment is unsure – validation required before sending.');
+  }
+
+  if(crit==='other'){
+    if(decision!=='declined') decision = 'review';
+    reasons.push('"Other" criticality (>24h) requires approval for task applicability and lead time.');
+  }
+
+  // Window checks
+  if(sched && deadline){
+    const diffHrs = Math.round((deadline.getTime()-sched.getTime())/3600000);
+    if((crit==='critical' && diffHrs>4) || (crit==='important' && diffHrs>24)){
+      reasons.push('Deadline is longer than recommended for selected criticality.');
+    }
+    if((crit==='critical' && diffHrs<4) || (crit==='important' && diffHrs<24)){
+      if(decision!=='declined') decision = 'review';
+      reasons.push('Deadline shorter than recommended – ensure urgency is justified.');
+    }
+  }
+
+  // Approved only if not declined, passes core checks, valid escalation, aligned policy, and critical/important
+  if(decision!=='declined' && essential && reinforce && isWhitbreadEmail(escalation) && policy==='yes' && (crit==='critical' || crit==='important')){
+    decision = 'approved';
+  }
+
+  // Missing / to confirm list
+  const missing = [];
+  if(!title) missing.push('Title');
+  if(!reqName) missing.push('Requester name');
+  if(!reqEmail) missing.push('Requester email');
+  else{
+    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(reqEmail);
+    if(!emailValid) missing.push('Requester email (invalid format)');
+  }
+  if(!isWhitbreadEmail(escalation)) missing.push('Escalation contact (named Whitbread email)');
+  if(!anyActionSelected()) missing.push('Select at least one action type');
+  if(!essential) missing.push('Confirm essential to record/track safety/compliance/service quality');
+  if(!reinforce) missing.push('Confirm task reinforces actions & expectations (no duplication)');
+  if(!sched) missing.push('Schedule date/time');
+  if(!deadline) missing.push('Deadline date/time');
+  if(policy==='unsure') missing.push('Validate policy alignment (currently Unsure)');
+  if(!who) missing.push('Select who can complete the task (Site Admin / Compliance Checker)');
+  if(!siteListAttach) missing.push('Confirm a site list will be attached to the request email');
+
+  const missingEl = document.getElementById('missing');
+  missingEl.innerHTML = missing.length ? missing.map(m=>`<li>${m}</li>`).join('') : '<li>None – all core details present.</li>';
+
+  // render decision
+  const decisionBox = document.getElementById('decision');
+  decisionBox.classList.remove('approved','review','declined');
+  decisionBox.classList.add(decision);
+  decisionBox.querySelector('h3').innerHTML = `<span>Decision:</span> ${decision==='approved'?'Approved to go in Co Pilot':(decision==='declined'?'Declined – revise and validate':'Review required – seek approval/validation')}`;
+
+  const reasonsEl = document.getElementById('reasons');
+  reasonsEl.innerHTML = reasons.map(r=>`<li>${r}</li>`).join('');
+
+  // formatters
+  const fmt = (d)=> d? d.toLocaleString('en-GB', {dateStyle:'medium', timeStyle:'short'}) : '[not set]';
+  const delta = (sched && deadline) ? ` (Δ ${Math.round((deadline.getTime()-sched.getTime())/3600000)}h)` : '';
+
+  // action type lines
+  const actionLines = [];
+  ['act_threat','act_remove','act_licence','act_allergy','act_pos','act_project','act_other'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el.checked){
+      const label = el.parentElement.querySelector('span').textContent.trim();
+      actionLines.push(`- ${label}`);
+    }
+  });
+  if(actionLines.length===0){ actionLines.push('- [Select at least one action type]'); }
+
+  // Email-style summary depending on decision (no weekend escalation inside email)
+  const lines = [];
+
+  if(decision==='approved' || decision==='review'){
+    const subject = `Co Pilot Ops Comms Task Request – ${title || '[Title]'} (${decision==='approved'?'Approved':'Approval Required'})`;
+    const to = decision==='approved' ? 'copilot.project@whitbread.com' : 'gillian.klarin@whitbread.com';
+    const cc = 'mark.fewtrell@whitbread.com; luke.wheeler@whitbread.com';
+
+    const intro = (decision==='approved')
+      ? 'Below is a summary of an approved request for an Ops Comms'
+      : 'I would like to request approval for the below task summary to be considered as an Ops Comms.';
+
+    lines.push(`Subject: ${subject}`);
+    lines.push(`To: ${to}  |  Cc: ${cc}`);
+    lines.push('');
+    lines.push('Hello,');
+    lines.push('');
+    lines.push(intro);
+    lines.push('');
+    lines.push('Summary of request');
+    lines.push('-------------------');
+    lines.push(`Title: ${title || '[Enter title]'}`);
+    lines.push(`Requester: ${reqName || '[Name]'} (${reqEmail || '[Email]'})`);
+    lines.push(`Escalation contact: ${escalation || '[Named Whitbread email]'}`);
+    lines.push(`Who can complete: ${who || '[Select role]'}`);
+    lines.push(`Site list attached: ${siteListAttach ? 'Yes' : 'No'}`);
+    lines.push('');
+    lines.push('Action type(s):');
+    lines.push(...actionLines);
+    lines.push('');
+    lines.push(`Criticality: ${criticalityLabel(crit)}`);
+    lines.push(`Schedule: ${fmt(sched)} | Deadline: ${fmt(deadline)}${delta}`);
+    lines.push('');
+    lines.push('Decision & rationale');
+    lines.push('--------------------');
+    lines.push(`${decision==='approved'?'Approved to go in Co Pilot': 'Approval required – seek validation'}`);
+    if(reasons.length){
+      lines.push('Reasons:');
+      reasons.forEach(r=>lines.push(`- ${r}`));
+    } else {
+      lines.push('Reasons: Meets core principles and policy.');
+    }
+    lines.push('');
+    lines.push('Missing information / to confirm');
+    lines.push('--------------------------------');
+    if(missing.length){ missing.forEach(m=>lines.push(`- ${m}`)); } else { lines.push('- None – all core details present.'); }
+    lines.push('');
+    lines.push('Task wording (including actions)');
+    lines.push('---------------------------------');
+    lines.push(desc || '[Provide the task wording and actions]');
+  } else {
+    // Declined: no email text
+    lines.push('Decision: Declined – revise and validate');
+    if(reasons.length){
+      lines.push('Reasons:');
+      reasons.forEach(r=>lines.push(`- ${r}`));
+    }
+    lines.push('');
+    lines.push('Missing information / to confirm');
+    lines.push('--------------------------------');
+    if(missing.length){ missing.forEach(m=>lines.push(`- ${m}`)); } else { lines.push('- None – all core details present.'); }
+    lines.push('');
+    lines.push('Task wording (including actions)');
+    lines.push('---------------------------------');
+    lines.push(desc || '[Provide the task wording and actions]');
+  }
+
+  document.getElementById('summary').textContent = lines.join('\n');
+}
+
+function copySummary(){
+  const txt = document.getElementById('summary').textContent;
+  navigator.clipboard.writeText(txt).then(()=>{ alert('Summary copied to clipboard'); })
+    .catch(()=>{ alert('Copy failed. Select and copy manually.'); });
+}
+
+function downloadTxt(){
+  const blob = new Blob([document.getElementById('summary').textContent], {type: 'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'cp_task_decision_summary.txt';
+  a.click();
+}
+
+function resetForm(){
+  document.querySelectorAll('input, textarea, select').forEach(el=>{
+    if(el.type==='checkbox'){ el.checked=false; }
+    else if(el.type==='radio'){ el.checked=false; }
+    else if(el.tagName==='SELECT'){ el.selectedIndex=0; }
+    else{ el.value=''; }
+  });
+  document.getElementById('crit_auto').checked = true;
+  updateCritPill('other');
+  document.getElementById('decision').className = 'decision review';
+  document.getElementById('decision').querySelector('h3').innerHTML = '<span>Decision:</span> Review required';
+  document.getElementById('reasons').innerHTML = '';
+  document.getElementById('missing').innerHTML = '';
+  document.getElementById('summary').textContent='';
+  document.getElementById('weekend').style.display = 'none';
+}
+
+// events
+ document.getElementById('generate').addEventListener('click', generate);
+ document.getElementById('copy').addEventListener('click', copySummary);
+ document.getElementById('download').addEventListener('click', downloadTxt);
+ document.getElementById('reset').addEventListener('click', resetForm);
+ document.getElementById('deadline_override').addEventListener('change', (e)=>{
+    document.getElementById('deadline_dt').readOnly = !e.target.checked;
+ });
+ ['crit_auto','crit_critical','crit_important','crit_other'].forEach(id=>{
+    document.getElementById(id).addEventListener('change', onCritChange);
+ });
+ document.getElementById('schedule_dt').addEventListener('change', onScheduleChange);
+
+ // initial
+ updateCritPill('other');
+ document.getElementById('deadline_dt').readOnly = true;
+</script>
+</body>
+</html>
