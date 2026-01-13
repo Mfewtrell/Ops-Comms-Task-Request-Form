@@ -195,7 +195,8 @@
 function isWhitbreadEmail(email){
   const e = email.trim();
   if(!e) return false;
-  const named = /^[a-zA-Z]+\.[a-zA-Z]+@whitbread\.(com|co\.uk)$/i.test(e);
+  // v6: allow digits/hyphens in surname part
+  const named = /^[a-zA-Z]+\.[a-zA-Z0-9-]+@whitbread\.(com|co\.uk)$/i.test(e);
   return named;
 }
 
@@ -389,6 +390,8 @@ function generate(){
   if(policy==='unsure') missing.push('Validate policy alignment (currently Unsure)');
   if(!who) missing.push('Select who can complete the task (Site Admin / Compliance Checker)');
   if(!siteListAttach) missing.push('Confirm a site list will be attached to the request email');
+  // v6: flag empty Task wording
+  if(!desc) missing.push('Task wording (including actions)');
 
   const missingEl = document.getElementById('missing');
   missingEl.innerHTML = missing.length ? missing.map(m=>`<li>${m}</li>`).join('') : '<li>None – all core details present.</li>';
