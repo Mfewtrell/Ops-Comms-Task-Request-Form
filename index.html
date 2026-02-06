@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -5,184 +6,323 @@
  <meta name="viewport" content="width=device-width, initial-scale=1">
  <title>Co Pilot Ops Comms – Task Decision Helper (Navigator style)</title>
  <style>
- :root{ --bg:#f7f7f9; --card:#ffffff; --text:#333333; --muted:#5f6368; --accent:#6c2a7c; --accent2:#c8a200; --ok:#1a7f37; --warn:#b17c00; --bad:#b00020; --border:#e6e6ea; }
- html,body{height:100%;}
- body{font-family:Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin:0; background:var(--bg); color:var(--text);} 
- header{background:linear-gradient(135deg, var(--accent), #8c3ca3); color:#fff; padding:1.2rem 1.5rem; border-bottom:4px solid var(--accent2);} 
- header h1{margin:0; font-size:1.35rem;} 
- header p{margin:.25rem 0 0; font-size:.95rem; opacity:.92;} 
- .container{max-width:1100px; margin:1rem auto 2rem; padding:0 1rem;} 
- .grid{display:grid; grid-template-columns:1fr 1fr; gap:1rem;} 
- .card{background:var(--card); padding:1rem; border-radius:.6rem; box-shadow:0 6px 18px rgba(0,0,0,.08); border:1px solid var(--border);} 
- .card h2{margin-top:0; font-size:1.1rem;} 
- fieldset{border:1px solid var(--border); border-radius:.6rem; padding:.8rem;} 
- legend{padding:0 .5rem; color:var(--muted);} 
- label{display:block; margin:.5rem 0 .25rem;} 
- input, select, textarea{width:100%; padding:.55rem .6rem; border:1px solid #ccc; border-radius:.4rem; font:inherit;} 
- textarea{min-height:110px;} 
- .small{font-size:.9rem; color:var(--muted);} 
- .row{display:flex; gap:.6rem; align-items:flex-start;} 
- .row > *{flex:1;} 
- .checkgrid{display:grid; grid-template-columns:1fr 1fr; gap:.25rem .75rem; align-items:start;} 
- .checkgrid label{display:grid; grid-template-columns:20px 1fr; align-items:start; column-gap:.5rem; padding:.2rem 0;} 
- .checkgrid input{width:18px; height:18px; margin-top:.2rem;} 
- .btn{appearance:none; border:none; border-radius:.45rem; padding:.6rem .9rem; font-weight:600; cursor:pointer;} 
- .btn-primary{background:var(--accent); color:#fff; box-shadow:0 2px 6px rgba(108,42,124,.35);} 
- .btn-secondary{background:#eee; color:#333;} 
- .btn-outline{background:transparent; border:1px solid #ccc;} 
- .pill{display:inline-flex; align-items:center; gap:.4rem; padding:.25rem .6rem; border-radius:999px; font-size:.85rem; border:1px solid var(--border);} 
- .pill.critical{background:#fde2e4; color:#b00020;} 
- .pill.important{background:#fff3cd; color:#8a6d3b;} 
- .pill.other{background:#e2f0ff; color:#1d4e89;} 
- .decision{border-left:4px solid #ddd; padding-left:.75rem;} 
- .decision.approved{border-color:var(--ok);} 
- .decision.review{border-color:var(--warn);} 
- .decision.declined{border-color:var(--bad);} 
- .decision h3{margin:.2rem 0 .6rem;} 
- .decision h3 span{font-weight:700;} 
- .alert-red{border-left:4px solid var(--bad); background:#fde2e4; border:1px solid #f5b7bd; color:#7a1020; padding:.6rem .8rem; border-radius:.5rem; margin:.6rem 0;} 
- .copy{display:flex; gap:.5rem; align-items:center;} 
- pre#summary{white-space:pre-wrap; background:#fff; border:1px solid var(--accent2); border-left-width:4px; border-radius:.6rem; padding:1rem; box-shadow:0 4px 12px rgba(0,0,0,.06); font-family:"Aptos", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;} 
- .footer{color:var(--muted); font-size:.85rem; margin-top:.6rem;} 
- .muted{color:var(--muted);} 
- .note{border-left:4px solid var(--accent2); padding:.4rem .6rem; background:#fff9e6; border:1px solid #f3e3a0; border-radius:.4rem;}
+  /* --- Navigator palette & base typography --- */
+  :root{
+    --blue:#0B4E87; --text:#333333; --shadow:0 8px 24px rgba(0,0,0,.12);
+    --accent1:#FFC400; --accent2:#2EB872; --accent3:#E0007A; --accent4:#00A1C6;
+    --note:#0B74C9; --important:#C9362B; --highlight:#FFF6BF;
+    --bg:#f4f6f8; --muted:#5b6770; --border:#e8eaec; --card:#ffffff;
+    --success:#2EB872; --warn:#B17C00; --bad:#B00020;
+  }
+  html,body{height:100%;}
+  body{margin:0; font-family:'Segoe UI', system-ui, -apple-system, Roboto, Arial, sans-serif; background:var(--bg); color:var(--text); scroll-behavior:smooth;}
+
+  /* --- Header with Navigator styling --- */
+  header{
+    background:var(--blue); color:#fff; padding:18px 22px; box-shadow:var(--shadow);
+  }
+  header h1{margin:0; font-size:24px; letter-spacing:.2px; font-weight:700;}
+  .brand-accents{display:flex; height:6px;}
+  .brand-accents .a1{background:var(--accent1); width:24%;}
+  .brand-accents .a2{background:var(--accent2); width:24%;}
+  .brand-accents .a3{background:var(--accent3); width:24%;}
+  .brand-accents .a4{background:var(--accent4); width:28%;}
+
+  /* --- Layout: single column --- */
+  .container{max-width:1000px; margin:24px auto 32px; padding:0 16px;}
+  .stack{display:flex; flex-direction:column; gap:24px;}
+
+  /* --- Panels / Cards --- */
+  .card{
+    background:var(--card); border-radius:12px; box-shadow:var(--shadow);
+    border:1px solid #e8eaec;
+  }
+  .card h2{
+    margin:0; padding:14px 16px; border-bottom:1px solid var(--border); font-size:16px;
+    font-weight:700; color:#1f2a44;
+  }
+  .card .inner{padding:16px;}
+
+  /* --- Form controls --- */
+  fieldset{
+    border:1px solid var(--border); border-radius:12px; padding:12px; margin:16px 0;
+    background:#fff;
+  }
+  legend{padding:0 6px; color:#5b6770; font-size:13px;}
+  label{display:block; margin:.5rem 0 .25rem; font-size:13px; color:#1f2a44;}
+  .small{font-size:12px; color:var(--muted);}
+  input, select, textarea{
+    width:100%; padding:8px 10px; border:1px solid #ccd3da; border-radius:8px; font:inherit; background:#fff;
+  }
+  textarea{min-height:110px;}
+  .row{display:flex; gap:12px; align-items:flex-start;}
+  .row > *{flex:1;}
+
+  /* --- Check/radio grids --- */
+  .checkgrid{display:grid; grid-template-columns:1fr 1fr; gap:.25rem .75rem; align-items:start;}
+  .checkgrid label{
+    display:grid; grid-template-columns:20px 1fr; align-items:start; column-gap:.5rem; padding:.2rem 0; font-size:13px; color:#333;
+  }
+  .checkgrid input[type="checkbox"], .checkgrid input[type="radio"]{ width:18px; height:18px; margin-top:.2rem; }
+
+  /* --- Buttons --- */
+  .btn{
+    appearance:none; border:1px solid #d0d7de; border-radius:8px; background:#fff; padding:8px 10px; font-size:13px; cursor:pointer;
+  }
+  .btn:hover{background:#f5f7fa;}
+  .btn-primary{background:var(--blue); color:#fff; border-color:var(--blue);}
+  .btn-primary:hover{filter:brightness(0.95);}
+  .btn-secondary{background:#fff; color:#333;}
+  .btn-outline{background:#fff; color:#333;}
+  .linklike{color:var(--blue); text-decoration:none; font-size:13px; padding:6px 8px;}
+  .linklike:hover{text-decoration:underline;}
+
+  .toolbar{
+    display:flex; gap:8px; flex-wrap:wrap; align-items:center;
+    position:sticky; top:0; background:#fff; padding:8px 16px; border-bottom:1px solid var(--border);
+    border-radius:12px 12px 0 0;
+    z-index:5;
+  }
+  .toolbar .spacer{flex:1;}
+
+  /* --- Pills & decision states --- */
+  .pill{display:inline-flex; align-items:center; gap:.4rem; padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid #d0d7de; background:#edf2ff; color:#244;}
+  .pill.critical{background:#fff5f5; color:var(--bad); border-color:#f0b8c0;}
+  .pill.important{background:#fff8e1; color:#8a6d3b; border-color:#edd9a6;}
+  .pill.other{background:#e7f6ff; color:#1d4e89; border-color:#cde7f7;}
+
+  .decision{
+    border-left:4px solid #d0d7de; padding:10px 12px; margin-top:10px; background:#fff; border-radius:8px; border:1px solid var(--border);
+  }
+  .decision.approved{border-color:var(--success); background:#f2fff7;}
+  .decision.review{border-color:#E6B800; background:#fffcee;}
+  .decision.declined{border-color:var(--bad); background:#fff5f6;}
+  .decision h3{margin:.2rem 0 .6rem; font-size:15px; color:#1f2a44;}
+  .decision h3 span{font-weight:700;}
+
+  /* --- Alerts & notes --- */
+  .alert-red{
+    border-left:4px solid var(--bad); background:#fff5f5; border:1px solid #f5b7bd; color:#7a1020; padding:.6rem .8rem; border-radius:8px; margin:.6rem 0;
+  }
+  .note{
+    border-left:4px solid var(--note); padding:.6rem .8rem; background:#f6fbff; border:1px solid #d7ecff; border-radius:8px;
+  }
+
+  /* --- Summary block --- */
+  pre#summary{
+    white-space:pre-wrap; background:#fff; border:1px solid var(--accent1);
+    border-left-width:4px; border-radius:12px; padding:16px; box-shadow:var(--shadow);
+    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size:12px;
+  }
+
+  /* --- Floating utility link --- */
+  .float-utility{
+    position:fixed; right:16px; bottom:16px; z-index:10;
+    display:flex; gap:8px; align-items:center;
+  }
+
+  /* --- Outcome flash highlight --- */
+  .flash{ animation:flash 1200ms ease-in-out 1; }
+  @keyframes flash{
+    0%{ box-shadow:0 0 0 0 rgba(255,196,0,0.0); }
+    20%{ box-shadow:0 0 0 6px rgba(255,196,0,0.35); }
+    100%{ box-shadow:0 0 0 0 rgba(255,196,0,0.0); }
+  }
+
+  .footer{color:var(--muted); font-size:.85rem; margin-top:.6rem;}
+  .muted{color:var(--muted);}
  </style>
 </head>
 <body>
- <header>
-  <h1>Co Pilot Ops Comms – Task Decision Helper</h1>
- </header>
- <div class="container">
-  <div class="grid">
-   <div class="card">
-    <h2>1) Request details</h2>
-    <label>Request title <span class="small">(e.g., "Allergy label update – Q1")</span>
-      <input id="title" placeholder="Title" />
-    </label>
-    <div class="row">
-      <label>Requester name
-        <input id="req_name" placeholder="Name" />
-      </label>
-      <label>Requester email
-        <input id="req_email" type="email" placeholder="name@whitbread.com" />
-      </label>
-    </div>
-    <label>Task wording (including actions)
-      <textarea id="desc" placeholder="Provide the task wording and clear actions sites must take."></textarea>
-    </label>
-    <fieldset>
-      <legend>Action type(s)</legend>
-      <div class="checkgrid">
-        <label><input type="checkbox" id="act_threat" /> <span>Threat to life (foreign body / allergy risk)</span></label>
-        <label><input type="checkbox" id="act_remove" /> <span>Remove & Destroy (quality issue)</span></label>
-        <label><input type="checkbox" id="act_licence" /> <span>Licence renewal</span></label>
-        <label><input type="checkbox" id="act_allergy" /> <span>Planned allergy update</span></label>
-        <label><input type="checkbox" id="act_pos" /> <span>POS display confirmation</span></label>
-        <label><input type="checkbox" id="act_project" /> <span>Project actions</span></label>
-        <label><input type="checkbox" id="act_other" /> <span>Other</span></label>
-      </div>
-    </fieldset>
-    <fieldset>
-      <legend>Principles checks</legend>
-      <div class="checkgrid">
-        <label><input type="checkbox" id="chk_essential" /> <span>Essential to record/track safety, compliance or service quality</span></label>
-        <label><input type="checkbox" id="chk_reinforce" /> <span>Task reinforces actions & expectations (not duplicating details)</span></label>
-      </div>
-      <label>Escalation contact (named Whitbread email)
-        <input id="escalation" type="email" placeholder="firstname.lastname@whitbread.com" />
-      </label>
-      <div class="row">
-        <label>Aligned to policy / standard procedure?
-          <select id="policy">
-            <option value="yes">Yes</option>
-            <option value="unsure">Unsure – needs validation</option>
-            <option value="no">No – not aligned</option>
-          </select>
-        </label>
-        <label>Includes stock removal?
-          <select id="stock">
-            <option value="no">No</option>
-            <option value="yes">Yes</option>
-          </select>
-        </label>
-      </div>
-    </fieldset>
-    <fieldset>
-      <legend>Schedule & deadline</legend>
-      <div class="row">
-        <label>Schedule date/time
-          <input id="schedule_dt" type="datetime-local" />
-        </label>
-        <label>Deadline date/time
-          <input id="deadline_dt" type="datetime-local" />
-        </label>
-      </div>
-      <div class="row">
-        <label>Criticality
-          <div class="checkgrid" style="grid-template-columns:1fr;">
-            <label><input type="radio" name="crit" id="crit_auto" checked /> <span>Auto (recommended)</span></label>
-            <label><input type="radio" name="crit" id="crit_critical" /> <span>Critical (4 hours)</span></label>
-            <label><input type="radio" name="crit" id="crit_important" /> <span>Important (24 hours)</span></label>
-            <label><input type="radio" name="crit" id="crit_other" /> <span>Other (>24 hours)</span></label>
-          </div>
-        </label>
-        <div>
-          <label class="row" style="align-items:center;">
-            <input type="checkbox" id="deadline_override" style="width:18px; height:18px;" />
-            <span>Allow manual deadline edit</span>
+  <header>
+    <h1>Co Pilot Ops Comms – Task Decision Helper</h1>
+  </header>
+  <div class="brand-accents"><span class="a1"></span><span class="a2"></span><span class="a3"></span><span class="a4"></span></div>
+
+  <div class="container">
+    <div class="stack">
+
+      <!-- REQUEST DETAILS (full width) -->
+      <div class="card" id="details">
+        <div class="toolbar">
+          <strong>Request details</strong>
+          <span class="spacer"></span>
+          <a class="linklike" href="#outcome">Jump to outcome</a>
+          <button class="btn btn-primary" id="generate" type="button">Generate decision</button>
+        </div>
+        <div class="inner">
+          <label>Request title <span class="small">(e.g., "Allergy label update – Q1")</span>
+            <input id="title" placeholder="Title" />
           </label>
-          <p class="small muted">Auto sets deadline from schedule using chosen criticality.</p>
+          <div class="row">
+            <label>Requester name
+              <input id="req_name" placeholder="Name" />
+            </label>
+            <label>Requester email
+              <input id="req_email" type="email" placeholder="name@whitbread.com" />
+            </label>
+          </div>
+          <label>Task wording (including actions)
+            <textarea id="desc" placeholder="Provide the task wording and clear actions sites must take."></textarea>
+          </label>
+
+          <!-- Purpose & Objectives -->
+          <fieldset>
+            <legend>Purpose & objectives</legend>
+
+            <label>Purpose of the request
+              <textarea id="purpose" placeholder="Why is this needed? What is the context or driver?"></textarea>
+            </label>
+
+            <label>Desired outcome / what success looks like
+              <textarea id="outcome_text" placeholder="What do you want to achieve? Define the expected end state."></textarea>
+            </label>
+
+            <label>Impacted audience / scope
+              <input id="audience" placeholder="Who is affected (e.g., all sites, specific brands, specific regions)"/>
+            </label>
+
+            <label>Dependencies or prerequisites
+              <textarea id="dependencies" placeholder="List any required approvals, system changes, stock availability, or prior comms."></textarea>
+            </label>
+          </fieldset>
+
+          <fieldset>
+            <legend>Action type(s)</legend>
+            <div class="checkgrid">
+              <label><input type="checkbox" id="act_threat" /> <span>Threat to life (foreign body / allergy risk)</span></label>
+              <label><input type="checkbox" id="act_remove" /> <span>Remove & Destroy (quality issue)</span></label>
+              <label><input type="checkbox" id="act_licence" /> <span>Licence renewal</span></label>
+              <label><input type="checkbox" id="act_allergy" /> <span>Planned allergy update</span></label>
+              <label><input type="checkbox" id="act_pos" /> <span>POS display confirmation</span></label>
+              <label><input type="checkbox" id="act_project" /> <span>Project actions</span></label>
+              <label><input type="checkbox" id="act_other" /> <span>Other</span></label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Principles checks</legend>
+            <div class="checkgrid">
+              <label><input type="checkbox" id="chk_essential" /> <span>Essential to record/track safety, compliance or service quality</span></label>
+              <label><input type="checkbox" id="chk_reinforce" /> <span>Task reinforces actions & expectations (not duplicating details)</span></label>
+            </div>
+            <label>Escalation contact (named Whitbread email)
+              <input id="escalation" type="email" placeholder="firstname.lastname@whitbread.com" />
+            </label>
+            <div class="row">
+              <label>Aligned to policy / standard procedure?
+                <select id="policy">
+                  <option value="yes">Yes</option>
+                  <option value="unsure">Unsure – needs validation</option>
+                  <option value="no">No – not aligned</option>
+                </select>
+              </label>
+              <label>Includes stock removal?
+                <select id="stock">
+                  <option value="no">No</option>
+                  <option value="yes">Yes</option>
+                </select>
+              </label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Schedule & deadline</legend>
+            <div class="row">
+              <label>Schedule date/time
+                <input id="schedule_dt" type="datetime-local" />
+              </label>
+              <label>Deadline date/time
+                <input id="deadline_dt" type="datetime-local" />
+              </label>
+            </div>
+            <div class="row">
+              <label>Criticality
+                <div class="checkgrid" style="grid-template-columns:1fr;">
+                  <label><input type="radio" name="crit" id="crit_auto" checked /> <span>Auto (recommended)</span></label>
+                  <label><input type="radio" name="crit" id="crit_critical" /> <span>Critical (4 hours)</span></label>
+                  <label><input type="radio" name="crit" id="crit_important" /> <span>Important (same day at 23:59)</span></label>
+                  <label><input type="radio" name="crit" id="crit_other" /> <span>Other (>24 hours)</span></label>
+                </div>
+              </label>
+              <div>
+                <label class="row" style="align-items:center;">
+                  <input type="checkbox" id="deadline_override" style="width:18px; height:18px;" />
+                  <span>Allow manual deadline edit</span>
+                </label>
+                <p class="small muted">Auto sets deadline from schedule using chosen criticality.</p>
+              </div>
+            </div>
+            <p class="small">
+              Auto picks +4h for threats to life. For Remove &amp; Destroy, Licence renewal or planned allergy updates (Important),
+              the deadline defaults to the same day as the schedule at 23:59. For POS, project or other, default is +72h.
+              You can enable manual override.
+            </p>
+          </fieldset>
+
+          <fieldset>
+            <legend>Completion & attachments</legend>
+            <div class="checkgrid" style="grid-template-columns:1fr;">
+              <label><input type="radio" name="who" id="who_admin" /> <span>Who can complete: Site Admin (Site Managers)</span></label>
+              <label><input type="radio" name="who" id="who_checker" /> <span>Who can complete: Compliance Checker (All other site roles)</span></label>
+            </div>
+            <label class="row" style="align-items:center;">
+              <input type="checkbox" id="site_list_attach" style="width:18px; height:18px;" />
+              <span>I will attach a site list with the request email</span>
+            </label>
+          </fieldset>
+
+          <div class="row">
+            <button class="btn btn-secondary" id="reset" type="button">Reset</button>
+            <button class="btn btn-primary" id="generate_bottom" type="button">Generate decision</button>
+            <a class="linklike" href="#outcome">View outcome</a>
+          </div>
         </div>
       </div>
-      <p class="small">Auto picks +4h for threats to life; +24h for Remove & Destroy, Licence renewal or planned allergy updates; +72h (default) for POS / project / other. You can enable manual override.</p>
-    </fieldset>
-    <fieldset>
-      <legend>Completion & attachments</legend>
-      <div class="checkgrid" style="grid-template-columns:1fr;">
-        <label><input type="radio" name="who" id="who_admin" /> <span>Who can complete: Site Admin (Site Managers)</span></label>
-        <label><input type="radio" name="who" id="who_checker" /> <span>Who can complete: Compliance Checker (All other site roles)</span></label>
+
+      <!-- OUTCOME (below the form) -->
+      <div class="card" id="outcome">
+        <h2>2) Outcome</h2>
+        <div class="inner" id="outcome_inner">
+          <div id="crit_pill" class="pill other">Criticality: Other (>24h)</div>
+          <div id="decision" class="decision review">
+            <h3><span>Decision:</span> Review required</h3>
+            <ul id="reasons"></ul>
+          </div>
+
+          <div id="weekend" class="alert-red" style="display:none;">
+            <strong>Weekend escalation:</strong> If this task is urgently required to be scheduled over the weekend you must contact one of the following: <strong>Luke Wheeler 07843814856</strong>, <strong>Mark Fewtrell 07514730845</strong>.
+          </div>
+
+          <h3 style="margin-top:18px;">Missing information / to confirm</h3>
+          <div class="note">
+            <ul id="missing"></ul>
+          </div>
+
+          <h2 style="font-size:16px; margin-top:18px; margin-bottom:8px;">Task summary (email‑ready)</h2>
+
+          <!-- Sticky action bar for the outcome tools -->
+          <div class="toolbar" style="position:sticky; top:0; border-radius:12px; margin:-16px -16px 8px; padding:8px 16px;">
+            <strong>Outcome actions</strong>
+            <span class="spacer"></span>
+            <button class="btn btn-secondary" id="copy" type="button">Copy summary</button>
+            <button class="btn btn-outline" id="download" type="button">Download .txt</button>
+            <button class="btn btn-primary" id="gen_email" type="button" title="Generate email draft">Generate Email</button>
+          </div>
+
+          <small class="muted">Opens in Outlook on the web; switches to .eml for long emails.</small>
+          <pre id="summary"></pre>
+          <div class="footer">ROM will be notified automatically for missed deadlines; Risk & Compliance will support securing completion. If the task includes stock removal, recorded volumes will be returned to the requester after completion.</div>
+        </div>
       </div>
-      <label class="row" style="align-items:center;">
-        <input type="checkbox" id="site_list_attach" style="width:18px; height:18px;" />
-        <span>I will attach a site list with the request email</span>
-      </label>
-    </fieldset>
-    <div class="row">
-      <button class="btn btn-secondary" id="reset">Reset</button>
-      <button class="btn btn-primary" id="generate">Generate decision</button>
-    </div>
-   </div>
 
-   <div class="card">
-    <h2>2) Outcome</h2>
-    <div id="crit_pill" class="pill other">Criticality: Other (>24h)</div>
-    <div id="decision" class="decision review">
-      <h3><span>Decision:</span> Review required</h3>
-      <ul id="reasons"></ul>
     </div>
-
-    <div id="weekend" class="alert-red" style="display:none;">
-      <strong>Weekend escalation:</strong> If this task is urgently required to be scheduled over the weekend you must contact one of the following: <strong>Luke Wheeler 07843814856</strong>, <strong>Mark Fewtrell 07514730845</strong>.
-    </div>
-
-    <h3>Missing information / to confirm</h3>
-    <div class="note">
-      <ul id="missing"></ul>
-    </div>
-
-    <h2>Task summary (email‑ready)</h2>
-    <div class="copy">
-      <button class="btn btn-secondary" id="copy">Copy summary</button>
-      <button class="btn btn-outline" id="download">Download .txt</button>
-      <button class="btn btn-primary" id="gen_email" title="Generate email draft">Generate Email</button>
-    </div>
-    <small class="muted">Opens in Outlook on the web; switches to .eml for long emails.</small>
-
-    <pre id="summary"></pre>
-    <div class="footer">ROM will be notified automatically for missed deadlines; Risk & Compliance will support securing completion. If the task includes stock removal, recorded volumes will be returned to the requester after completion.</div>
-   </div>
   </div>
- </div>
+
+  <!-- Floating utility -->
+  <div class="float-utility">
+    <a class="btn" href="#details">Back to top</a>
+  </div>
 
 <script>
 // --- Utilities ---
@@ -217,12 +357,12 @@ function selectedCriticality(){
 }
 function criticalityLabel(c){
   if(c==='critical') return 'Critical (4 hours)';
-  if(c==='important') return 'Important (24 hours)';
+  if(c==='important') return 'Important (same day at 23:59)';
   return 'Other (>24 hours)';
 }
 function hoursFor(c){
   if(c==='critical') return 4;
-  if(c==='important') return 24;
+  if(c==='important') return 24; // unused for EOD, kept for completeness
   return 72; // default
 }
 function updateCritPill(c){
@@ -247,6 +387,8 @@ function fromLocalInputValue(val){
   const [hh,mm] = tpart.split(':').map(Number);
   return new Date(y, m-1, d, hh, mm);
 }
+function endOfDay(date){ return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 0, 0); }
+
 function computeDeadline(){
   const schedVal = document.getElementById('schedule_dt').value;
   const override = document.getElementById('deadline_override').checked;
@@ -255,8 +397,14 @@ function computeDeadline(){
   updateCritPill(crit);
   const sched = fromLocalInputValue(schedVal);
   if(!override && sched){
-    const hrs = hoursFor(crit);
-    const deadline = new Date(sched.getTime() + hrs*60*60*1000);
+    let deadline;
+    if(crit==='critical'){
+      deadline = new Date(sched.getTime() + 4*60*60*1000);
+    } else if(crit==='important'){
+      deadline = endOfDay(sched); // same day 23:59
+    } else {
+      deadline = new Date(sched.getTime() + hoursFor(crit)*60*60*1000);
+    }
     document.getElementById('deadline_dt').value = toLocalInputValue(deadline);
   }
   const weekendEl = document.getElementById('weekend');
@@ -281,7 +429,6 @@ function textToHtml(text){
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
     .replace(/(?:\r\n|\r|\n)/g,'<br>');
 }
-// Recipient normaliser: use comma-separated values and move all recipients to To
 function normalizeRecipients(listStr){
   return String(listStr||'')
     .replace(/[\n\r]/g, ',')
@@ -292,15 +439,11 @@ function normalizeRecipients(listStr){
     .join(', ');
 }
 function openOwaCompose({ to = '', cc = '', bcc = '', subject = '', bodyText = '' }){
-  // Combine all recipients into To (workaround for inconsistent cc in OWA)
   const allTo = [to, cc, bcc].filter(Boolean).join(', ');
   const parts = [];
   if (allTo) parts.push('to=' + encodeURIComponent(normalizeRecipients(allTo)));
   parts.push('subject=' + encodeURIComponent(subject || ''));
-  // body is plain text in deeplinks; ensure %20 for spaces and %0A for newlines
-  const bodyEncoded = encodeURIComponent(bodyText || '')
-                        .replace(/%0D%0A/g, '%0A')
-                        .replace(/%20/g, '%20');
+  const bodyEncoded = encodeURIComponent(bodyText || ''); // body built with CRLF upstream
   parts.push('body=' + bodyEncoded);
   const href = 'https://outlook.office.com/mail/deeplink/compose?' + parts.join('&');
   if (href.length >= 1900) return { ok:false, reason:'length', href };
@@ -308,7 +451,6 @@ function openOwaCompose({ to = '', cc = '', bcc = '', subject = '', bodyText = '
   return { ok:true, href };
 }
 function downloadEmlDraft({ to='', cc='', bcc='', subject='', bodyHtml='' }){
-  // Combine all recipients into To for the .eml too
   const allTo = [to, cc, bcc].filter(Boolean).join(', ');
   const headers = [];
   if (allTo) headers.push(`To: ${allTo}`);
@@ -327,10 +469,20 @@ function downloadEmlDraft({ to='', cc='', bcc='', subject='', bodyHtml='' }){
 let currentEmail = null;
 
 function generate(){
+  // Always compute latest deadline before reading values (for clarity)
+  computeDeadline();
+
   const title = document.getElementById('title').value.trim();
   const reqName = document.getElementById('req_name').value.trim();
   const reqEmail = document.getElementById('req_email').value.trim();
   const desc = document.getElementById('desc').value.trim();
+
+  // Purpose & objectives
+  const purpose = document.getElementById('purpose').value.trim();
+  const outcomeText = document.getElementById('outcome_text').value.trim();
+  const audience = document.getElementById('audience').value.trim();
+  const dependencies = document.getElementById('dependencies').value.trim();
+
   const essential = document.getElementById('chk_essential').checked;
   const reinforce = document.getElementById('chk_reinforce').checked;
   const escalation = document.getElementById('escalation').value.trim();
@@ -376,12 +528,17 @@ function generate(){
   }
   if(sched && deadline){
     const diffHrs = Math.round((deadline.getTime()-sched.getTime())/3600000);
-    if((crit==='critical' && diffHrs>4) || (crit==='important' && diffHrs>24)){
-      reasons.push('Deadline is longer than recommended for selected criticality.');
-    }
-    if((crit==='critical' && diffHrs<4) || (crit==='important' && diffHrs<24)){
-      if(decision!=='declined') decision = 'review';
-      reasons.push('Deadline shorter than recommended – ensure urgency is justified.');
+    if(crit==='critical'){
+      if(diffHrs>4){ reasons.push('Deadline is longer than recommended for selected criticality.'); }
+      if(diffHrs<4){
+        if(decision!=='declined') decision = 'review';
+        reasons.push('Deadline shorter than recommended – ensure urgency is justified.');
+      }
+    } else if(crit==='important'){
+      const eod = endOfDay(sched);
+      if(deadline.getTime() > eod.getTime()){
+        reasons.push('Deadline is later than the end-of-day default for Important.');
+      }
     }
   }
   if(decision!=='declined' && essential && reinforce && isWhitbreadEmail(escalation) && policy==='yes' && (crit==='critical' || crit==='important')){
@@ -408,6 +565,11 @@ function generate(){
   if(!siteListAttach) missing.push('Confirm a site list will be attached to the request email');
   if(!desc) missing.push('Task wording (including actions)');
 
+  if(!purpose) missing.push('Purpose of the request');
+  if(!outcomeText) missing.push('Desired outcome / what success looks like');
+  if(!audience) missing.push('Impacted audience / scope');
+  if(!dependencies) missing.push('Dependencies or prerequisites (if any)');
+
   const missingEl = document.getElementById('missing');
   missingEl.innerHTML = missing.length ? missing.map(m=>`<li>${m}</li>`).join('') : '<li>None – all core details present.</li>';
 
@@ -418,7 +580,7 @@ function generate(){
   const reasonsEl = document.getElementById('reasons');
   reasonsEl.innerHTML = reasons.map(r=>`<li>${r}</li>`).join('');
 
-  const fmt = (d)=> d? d.toLocaleString('en-GB', {dateStyle:'medium', timeStyle:'short'}) : '[not set]';
+  const fmt =(d)=> d? d.toLocaleString('en-GB', {dateStyle:'medium', timeStyle:'short'}) : '[not set]';
   const delta = (sched && deadline) ? ` (Δ ${Math.round((deadline.getTime()-sched.getTime())/3600000)}h)` : '';
 
   const actionLines = [];
@@ -457,6 +619,15 @@ function generate(){
     lines.push(`Escalation contact: ${escalation || '[Named Whitbread email]'}`);
     lines.push(`Who can complete: ${who || '[Select role]'}`);
     lines.push(`Site list attached: ${siteListAttach ? 'Yes' : 'No'}`);
+
+    lines.push('');
+    lines.push('Purpose & objectives');
+    lines.push('---------------------');
+    lines.push(`Purpose: ${purpose || '[Explain why this is needed]'}`);
+    lines.push(`Outcome (what success looks like): ${outcomeText || '[Define the expected end state]'}`);
+    lines.push(`Impacted audience / scope: ${audience || '[Who is affected]'}`);
+    lines.push(`Dependencies / prerequisites: ${dependencies || '[List any dependencies or approvals]'}`);
+
     lines.push('');
     lines.push('Action type(s):');
     lines.push(...actionLines);
@@ -476,8 +647,8 @@ function generate(){
     lines.push('');
     lines.push('Missing information / to confirm');
     lines.push('----------------------------------------------');
-    const missing = Array.from(document.querySelectorAll('#missing li')).map(li => li.textContent).filter(Boolean);
-    if(missing.length){ missing.forEach(m=>lines.push(`- ${m}`)); } else { lines.push('- None – all core details present.'); }
+    const missingList = Array.from(document.querySelectorAll('#missing li')).map(li => li.textContent).filter(Boolean);
+    if(missingList.length){ missingList.forEach(m=>lines.push(`- ${m}`)); } else { lines.push('- None – all core details present.'); }
     lines.push('');
     lines.push('Task wording (including actions)');
     lines.push('--------------------------------');
@@ -491,8 +662,17 @@ function generate(){
     lines.push('');
     lines.push('Missing information / to confirm');
     lines.push('----------------------------------------------');
-    const missing = Array.from(document.querySelectorAll('#missing li')).map(li => li.textContent).filter(Boolean);
-    if(missing.length){ missing.forEach(m=>lines.push(`- ${m}`)); } else { lines.push('- None – all core details present.'); }
+    const missingList = Array.from(document.querySelectorAll('#missing li')).map(li => li.textContent).filter(Boolean);
+    if(missingList.length){ missingList.forEach(m=>lines.push(`- ${m}`)); } else { lines.push('- None – all core details present.'); }
+
+    lines.push('');
+    lines.push('Purpose & objectives');
+    lines.push('---------------------');
+    lines.push(`Purpose: ${purpose || '[Explain why this is needed]'}`);
+    lines.push(`Outcome (what success looks like): ${outcomeText || '[Define the expected end state]'}`);
+    lines.push(`Impacted audience / scope: ${audience || '[Who is affected]'}`);
+    lines.push(`Dependencies / prerequisites: ${dependencies || '[List any dependencies or approvals]'}`);
+
     lines.push('');
     lines.push('Task wording (including actions)');
     lines.push('--------------------------------');
@@ -508,10 +688,18 @@ function generate(){
     if (btn) { btn.disabled = true; btn.title = 'Decision is Declined – no email generated'; }
   } else {
     const allTo = [to, cc].filter(Boolean).join(', ');
-    const bodyText = lines.slice(2).join('\n');
+    const bodyText = lines.slice(2).join('\r\n'); // CRLF for OWA
     currentEmail = { to: allTo, cc: '', bcc: '', subject, bodyText };
     if (btn) { btn.disabled = false; btn.title = 'Generate email draft'; }
   }
+
+  // UX: auto-scroll Outcome into view and flash
+  const outcomeCard = document.getElementById('outcome');
+  outcomeCard.scrollIntoView({ behavior:'smooth', block:'start' });
+  const inner = document.getElementById('outcome_inner');
+  inner.classList.remove('flash');
+  void inner.offsetWidth; // reflow to restart animation
+  inner.classList.add('flash');
 }
 
 function copySummary(){
@@ -546,41 +734,43 @@ function resetForm(){
 }
 
 // events
- document.getElementById('generate').addEventListener('click', generate);
- document.getElementById('copy').addEventListener('click', copySummary);
- document.getElementById('download').addEventListener('click', downloadTxt);
- document.getElementById('reset').addEventListener('click', resetForm);
- document.getElementById('deadline_override').addEventListener('change', (e)=>{
-   document.getElementById('deadline_dt').readOnly = !e.target.checked;
- });
- ['crit_auto','crit_critical','crit_important','crit_other'].forEach(id=>{
-   document.getElementById(id).addEventListener('change', onCritChange);
- });
- document.getElementById('schedule_dt').addEventListener('change', onScheduleChange);
- document.getElementById('gen_email').addEventListener('click', ()=>{
-   if (!currentEmail) { alert('No email is available for this decision.'); return; }
-   const attempt = openOwaCompose({
-     to: currentEmail.to,
-     cc: currentEmail.cc,
-     bcc: currentEmail.bcc,
-     subject: currentEmail.subject,
-     bodyText: currentEmail.bodyText
-   });
-   if (!attempt.ok && attempt.reason === 'length') {
-     downloadEmlDraft({
-       to: currentEmail.to,
-       cc: currentEmail.cc,
-       bcc: currentEmail.bcc,
-       subject: currentEmail.subject,
-       bodyHtml: textToHtml(currentEmail.bodyText)
-     });
-   }
- });
- // initial
- updateCritPill('other');
- document.getElementById('deadline_dt').readOnly = true;
- const initBtn = document.getElementById('gen_email');
- if (initBtn) { initBtn.disabled = true; initBtn.title = 'Generate a decision first'; }
+document.getElementById('generate').addEventListener('click', generate);
+document.getElementById('generate_bottom').addEventListener('click', generate);
+document.getElementById('copy').addEventListener('click', copySummary);
+document.getElementById('download').addEventListener('click', downloadTxt);
+document.getElementById('reset').addEventListener('click', resetForm);
+document.getElementById('deadline_override').addEventListener('change', (e)=>{
+  document.getElementById('deadline_dt').readOnly = !e.target.checked;
+  if(!e.target.checked){ computeDeadline(); } // when re-enabling auto, recompute immediately
+});
+['crit_auto','crit_critical','crit_important','crit_other'].forEach(id=>{
+  document.getElementById(id).addEventListener('change', onCritChange);
+});
+document.getElementById('schedule_dt').addEventListener('change', onScheduleChange);
+document.getElementById('gen_email').addEventListener('click', ()=>{
+  if (!currentEmail) { alert('No email is available for this decision.'); return; }
+  const attempt = openOwaCompose({
+    to: currentEmail.to,
+    cc: currentEmail.cc,
+    bcc: currentEmail.bcc,
+    subject: currentEmail.subject,
+    bodyText: currentEmail.bodyText
+  });
+  if (!attempt.ok && attempt.reason === 'length') {
+    downloadEmlDraft({
+      to: currentEmail.to,
+      cc: currentEmail.cc,
+      bcc: currentEmail.bcc,
+      subject: currentEmail.subject,
+      bodyHtml: textToHtml(currentEmail.bodyText)
+    });
+  }
+});
+// initial
+updateCritPill('other');
+document.getElementById('deadline_dt').readOnly = true;
+const initBtn = document.getElementById('gen_email');
+if (initBtn) { initBtn.disabled = true; initBtn.title = 'Generate a decision first'; }
 </script>
 </body>
 </html>
