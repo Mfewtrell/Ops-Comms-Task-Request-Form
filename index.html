@@ -2,149 +2,89 @@
 <!doctype html>
 <html lang="en">
 <head>
- <meta charset="utf-8">
- <meta name="viewport" content="width=device-width, initial-scale=1">
- <title>Co Pilot Ops Comms – Task Decision Helper (Navigator style)</title>
- <style>
-  /* --- Navigator palette & base typography --- */
-  :root{
-    --blue:#0B4E87; --text:#333333; --shadow:0 8px 24px rgba(0,0,0,.12);
-    --accent1:#FFC400; --accent2:#2EB872; --accent3:#E0007A; --accent4:#00A1C6;
-    --note:#0B74C9; --important:#C9362B; --highlight:#FFF6BF;
-    --bg:#f4f6f8; --muted:#5b6770; --border:#e8eaec; --card:#ffffff;
-    --success:#2EB872; --warn:#B17C00; --bad:#B00020;
-  }
-  html,body{height:100%;}
-  body{margin:0; font-family:'Segoe UI', system-ui, -apple-system, Roboto, Arial, sans-serif; background:var(--bg); color:var(--text); scroll-behavior:smooth;}
-
-  /* --- Header with Navigator styling --- */
-  header{
-    background:var(--blue); color:#fff; padding:18px 22px; box-shadow:var(--shadow);
-  }
-  header h1{margin:0; font-size:24px; letter-spacing:.2px; font-weight:700;}
-  .brand-accents{display:flex; height:6px;}
-  .brand-accents .a1{background:var(--accent1); width:24%;}
-  .brand-accents .a2{background:var(--accent2); width:24%;}
-  .brand-accents .a3{background:var(--accent3); width:24%;}
-  .brand-accents .a4{background:var(--accent4); width:28%;}
-
-  /* --- Layout: single column --- */
-  .container{max-width:1000px; margin:24px auto 32px; padding:0 16px;}
-  .stack{display:flex; flex-direction:column; gap:24px;}
-
-  /* --- Panels / Cards --- */
-  .card{
-    background:var(--card); border-radius:12px; box-shadow:var(--shadow);
-    border:1px solid #e8eaec;
-  }
-  .card h2{
-    margin:0; padding:14px 16px; border-bottom:1px solid var(--border); font-size:16px;
-    font-weight:700; color:#1f2a44;
-  }
-  .card .inner{padding:16px;}
-
-  /* --- Form controls --- */
-  fieldset{
-    border:1px solid var(--border); border-radius:12px; padding:12px; margin:16px 0;
-    background:#fff;
-  }
-  legend{padding:0 6px; color:#5b6770; font-size:13px;}
-  label{display:block; margin:.5rem 0 .25rem; font-size:13px; color:#1f2a44;}
-  .small{font-size:12px; color:var(--muted);}
-  input, select, textarea{
-    width:100%; padding:8px 10px; border:1px solid #ccd3da; border-radius:8px; font:inherit; background:#fff;
-  }
-  textarea{min-height:110px;}
-  .row{display:flex; gap:12px; align-items:flex-start;}
-  .row > *{flex:1;}
-
-  /* --- Check/radio grids --- */
-  .checkgrid{display:grid; grid-template-columns:1fr 1fr; gap:.25rem .75rem; align-items:start;}
-  .checkgrid label{
-    display:grid; grid-template-columns:20px 1fr; align-items:start; column-gap:.5rem; padding:.2rem 0; font-size:13px; color:#333;
-  }
-  .checkgrid input[type="checkbox"], .checkgrid input[type="radio"]{ width:18px; height:18px; margin-top:.2rem; }
-
-  /* --- Buttons --- */
-  .btn{
-    appearance:none; border:1px solid #d0d7de; border-radius:8px; background:#fff; padding:8px 10px; font-size:13px; cursor:pointer;
-  }
-  .btn:hover{background:#f5f7fa;}
-  .btn-primary{background:var(--blue); color:#fff; border-color:var(--blue);}
-  .btn-primary:hover{filter:brightness(0.95);}
-  .btn-secondary{background:#fff; color:#333;}
-  .btn-outline{background:#fff; color:#333;}
-  .linklike{color:var(--blue); text-decoration:none; font-size:13px; padding:6px 8px;}
-  .linklike:hover{text-decoration:underline;}
-
-  .toolbar{
-    display:flex; gap:8px; flex-wrap:wrap; align-items:center;
-    position:sticky; top:0; background:#fff; padding:8px 16px; border-bottom:1px solid var(--border);
-    border-radius:12px 12px 0 0;
-    z-index:5;
-  }
-  .toolbar .spacer{flex:1;}
-
-  /* --- Pills & decision states --- */
-  .pill{display:inline-flex; align-items:center; gap:.4rem; padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid #d0d7de; background:#edf2ff; color:#244;}
-  .pill.critical{background:#fff5f5; color:var(--bad); border-color:#f0b8c0;}
-  .pill.important{background:#fff8e1; color:#8a6d3b; border-color:#edd9a6;}
-  .pill.other{background:#e7f6ff; color:#1d4e89; border-color:#cde7f7;}
-
-  .decision{
-    border-left:4px solid #d0d7de; padding:10px 12px; margin-top:10px; background:#fff; border-radius:8px; border:1px solid var(--border);
-  }
-  .decision.approved{border-color:var(--success); background:#f2fff7;}
-  .decision.review{border-color:#E6B800; background:#fffcee;}
-  .decision.declined{border-color:var(--bad); background:#fff5f6;}
-  .decision h3{margin:.2rem 0 .6rem; font-size:15px; color:#1f2a44;}
-  .decision h3 span{font-weight:700;}
-
-  /* --- Alerts & notes --- */
-  .alert-red{
-    border-left:4px solid var(--bad); background:#fff5f5; border:1px solid #f5b7bd; color:#7a1020; padding:.6rem .8rem; border-radius:8px; margin:.6rem 0;
-  }
-  /* Strong callout for missing info */
-  .callout-important{
-    border-left:4px solid var(--important); background:#fff1f0; border:1px solid #f0b5b0;
-    padding:12px 14px; border-radius:10px; margin:12px 0;
-  }
-
-  /* --- Summary block --- */
-  pre#summary{
-    white-space:pre-wrap; background:#fff; border:1px solid var(--accent1);
-    border-left-width:4px; border-radius:12px; padding:16px; box-shadow:var(--shadow);
-    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size:12px;
-  }
-
-  /* --- Floating utility link --- */
-  .float-utility{
-    position:fixed; right:16px; bottom:16px; z-index:10;
-    display:flex; gap:8px; align-items:center;
-  }
-
-  /* --- Flash highlight --- */
-  .flash{ animation:flash 1200ms ease-in-out 1; }
-  @keyframes flash{
-    0%{ box-shadow:0 0 0 0 rgba(255,196,0,0.0); }
-    20%{ box-shadow:0 0 0 6px rgba(255,196,0,0.35); }
-    100%{ box-shadow:0 0 0 0 rgba(255,196,0,0.0); }
-  }
-
-  .footer{color:var(--muted); font-size:.85rem; margin-top:.6rem;}
-  .muted{color:var(--muted);}
- </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Co Pilot Ops Comms – Task Decision Helper (v4 OWA compose)</title>
+  <style>
+    /* --- Navigator palette & base typography --- */
+    :root{
+      --blue:#0B4E87; --text:#333333; --shadow:0 8px 24px rgba(0,0,0,.12);
+      --accent1:#FFC400; --accent2:#2EB872; --accent3:#E0007A; --accent4:#00A1C6;
+      --note:#0B74C9; --important:#C9362B; --highlight:#FFF6BF;
+      --bg:#f4f6f8; --muted:#5b6770; --border:#e8eaec; --card:#ffffff;
+      --success:#2EB872; --warn:#B17C00; --bad:#B00020;
+    }
+    html,body{height:100%;}
+    body{margin:0; font-family:'Segoe UI', system-ui, -apple-system, Roboto, Arial, sans-serif; background:var(--bg); color:var(--text);}
+    /* --- Header --- */
+    header{background:var(--blue); color:#fff; padding:18px 22px; box-shadow:var(--shadow);} 
+    header h1{margin:0; font-size:24px; font-weight:700; letter-spacing:.2px;}
+    .brand-accents{display:flex; height:6px;}
+    .brand-accents .a1{background:var(--accent1); width:24%;}
+    .brand-accents .a2{background:var(--accent2); width:24%;}
+    .brand-accents .a3{background:var(--accent3); width:24%;}
+    .brand-accents .a4{background:var(--accent4); width:28%;}
+    /* --- Layout --- */
+    .container{max-width:1000px; margin:24px auto 32px; padding:0 16px;}
+    .stack{display:flex; flex-direction:column; gap:24px;}
+    /* --- Cards --- */
+    .card{background:var(--card); border-radius:12px; box-shadow:var(--shadow); border:1px solid var(--border);} 
+    .card h2{margin:0; padding:14px 16px; border-bottom:1px solid var(--border); font-size:16px; font-weight:700; color:#1f2a44;}
+    .card .inner{padding:16px;}
+    /* --- Form --- */
+    fieldset{border:1px solid var(--border); border-radius:12px; padding:12px; margin:16px 0; background:#fff;}
+    legend{padding:0 6px; color:#5b6770; font-size:13px;}
+    label{display:block; margin:.5rem 0 .25rem; font-size:13px; color:#1f2a44;}
+    .small{font-size:12px; color:var(--muted);} 
+    input, select, textarea{width:100%; padding:8px 10px; border:1px solid #ccd3da; border-radius:8px; font:inherit; background:#fff;}
+    textarea{min-height:110px;}
+    .row{display:flex; gap:12px; align-items:flex-start;}
+    .row > *{flex:1;}
+    .checkgrid{display:grid; grid-template-columns:1fr 1fr; gap:.25rem .75rem; align-items:start;}
+    .checkgrid label{display:grid; grid-template-columns:20px 1fr; align-items:start; column-gap:.5rem; padding:.2rem 0; font-size:13px; color:#333;}
+    .checkgrid input[type="checkbox"], .checkgrid input[type="radio"]{ width:18px; height:18px; margin-top:.2rem; }
+    /* --- Buttons --- */
+    .btn{appearance:none; border:1px solid #d0d7de; border-radius:8px; background:#fff; padding:8px 10px; font-size:13px; cursor:pointer;}
+    .btn:hover{background:#f5f7fa;}
+    .btn-primary{background:var(--blue); color:#fff; border-color:var(--blue);} 
+    .btn-primary:hover{filter:brightness(0.95);} 
+    .btn-secondary{background:#fff; color:#333;}
+    .btn-outline{background:#fff; color:#333;}
+    .linklike{color:var(--blue); text-decoration:none; font-size:13px; padding:6px 8px;}
+    .linklike:hover{text-decoration:underline;}
+    .toolbar{display:flex; gap:8px; flex-wrap:wrap; align-items:center; position:sticky; top:0; background:#fff; padding:8px 16px; border-bottom:1px solid var(--border); border-radius:12px 12px 0 0; z-index:5;}
+    .toolbar .spacer{flex:1;}
+    /* --- Pills & decisions --- */
+    .pill{display:inline-flex; align-items:center; gap:.4rem; padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid #d0d7de; background:#edf2ff; color:#244;}
+    .pill.critical{background:#fff5f5; color:var(--bad); border-color:#f0b8c0;}
+    .pill.important{background:#fff8e1; color:#8a6d3b; border-color:#edd9a6;}
+    .pill.other{background:#e7f6ff; color:#1d4e89; border-color:#cde7f7;}
+    .decision{border-left:4px solid #d0d7de; padding:10px 12px; margin-top:10px; background:#fff; border-radius:8px; border:1px solid var(--border);} 
+    .decision.approved{border-color:var(--success); background:#f2fff7;}
+    .decision.review{border-color:#E6B800; background:#fffcee;}
+    .decision.declined{border-color:var(--bad); background:#fff5f6;}
+    .decision h3{margin:.2rem 0 .6rem; font-size:15px; color:#1f2a44;}
+    .decision h3 span{font-weight:700;}
+    /* --- Alerts --- */
+    .alert-red{border-left:4px solid var(--bad); background:#fff5f5; border:1px solid #f5b7bd; color:#7a1020; padding:.6rem .8rem; border-radius:8px; margin:.6rem 0;}
+    .callout-important{border-left:4px solid var(--important); background:#fff1f0; border:1px solid #f0b5b0; padding:12px 14px; border-radius:10px; margin:12px 0;}
+    /* --- Summary --- */
+    pre#summary{white-space:pre-wrap; background:#fff; border:1px solid var(--accent1); border-left-width:4px; border-radius:12px; padding:16px; box-shadow:var(--shadow); font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size:12px;}
+    .float-utility{position:fixed; right:16px; bottom:16px; z-index:10; display:flex; gap:8px; align-items:center;}
+    .flash{ animation:flash 1200ms ease-in-out 1; }
+    @keyframes flash{ 0%{ box-shadow:0 0 0 0 rgba(255,196,0,0.0);} 20%{ box-shadow:0 0 0 6px rgba(255,196,0,0.35);} 100%{ box-shadow:0 0 0 0 rgba(255,196,0,0.0);} }
+    .footer{color:var(--muted); font-size:.85rem; margin-top:.6rem;}
+    .muted{color:var(--muted);} 
+  </style>
 </head>
 <body>
   <header>
     <h1>Co Pilot Ops Comms – Task Decision Helper</h1>
   </header>
   <div class="brand-accents"><span class="a1"></span><span class="a2"></span><span class="a3"></span><span class="a4"></span></div>
-
   <div class="container">
     <div class="stack">
-
-      <!-- REQUEST DETAILS (full width) -->
+      <!-- REQUEST DETAILS -->
       <div class="card" id="details">
         <div class="toolbar">
           <strong>Request details</strong>
@@ -168,22 +108,17 @@
             <textarea id="desc" placeholder="Provide the task wording and clear actions sites must take."></textarea>
           </label>
 
-          <!-- Purpose & Objectives -->
           <fieldset>
             <legend>Purpose & objectives</legend>
-
             <label>Purpose of the request
               <textarea id="purpose" placeholder="Why is this needed? What is the context or driver?"></textarea>
             </label>
-
             <label>Desired outcome / what success looks like
               <textarea id="outcome_text" placeholder="What do you want to achieve? Define the expected end state."></textarea>
             </label>
-
             <label>Impacted audience / scope
               <input id="audience" placeholder="Who is affected (e.g., all sites, specific brands, specific regions)"/>
             </label>
-
             <label>Dependencies or prerequisites
               <textarea id="dependencies" placeholder="List any required approvals, system changes, stock availability, or prior comms."></textarea>
             </label>
@@ -204,7 +139,7 @@
 
           <fieldset>
             <legend>Principles checks</legend>
-            <div class="checkgrid">
+            <div class="checkgrid" style="grid-template-columns:1fr;">
               <label><input type="checkbox" id="chk_essential" /> <span>Essential to record/track safety, compliance or service quality</span></label>
               <label><input type="checkbox" id="chk_reinforce" /> <span>Task reinforces actions & expectations (not duplicating details)</span></label>
             </div>
@@ -244,7 +179,7 @@
                   <label><input type="radio" name="crit" id="crit_auto" checked /> <span>Auto (recommended)</span></label>
                   <label><input type="radio" name="crit" id="crit_critical" /> <span>Critical (4 hours)</span></label>
                   <label><input type="radio" name="crit" id="crit_important" /> <span>Important (same day at 23:59)</span></label>
-                  <label><input type="radio" name="crit" id="crit_other" /> <span>Other (>24 hours)</span></label>
+                  <label><input type="radio" name="crit" id="crit_other" /> <span>Other (&gt;24 hours)</span></label>
                 </div>
               </label>
               <div>
@@ -255,11 +190,7 @@
                 <p class="small muted">Auto sets deadline from schedule using chosen criticality.</p>
               </div>
             </div>
-            <p class="small">
-              Auto picks +4h for threats to life. For Remove &amp; Destroy, Licence renewal or planned allergy updates (Important),
-              the deadline defaults to the same day as the schedule at 23:59. For POS, project or other, default is +72h.
-              You can enable manual override.
-            </p>
+            <p class="small">Auto picks +4h for threats to life. For Remove & Destroy, Licence renewal or planned allergy updates (Important), the deadline defaults to the same day as the schedule at 23:59. For POS, project or other, default is +72h. You can enable manual override.</p>
           </fieldset>
 
           <fieldset>
@@ -282,16 +213,15 @@
         </div>
       </div>
 
-      <!-- OUTCOME (below the form) -->
+      <!-- OUTCOME -->
       <div class="card" id="outcome">
         <h2>2) Outcome</h2>
         <div class="inner" id="outcome_inner">
-          <div id="crit_pill" class="pill other">Criticality: Other (>24h)</div>
+          <div id="crit_pill" class="pill other">Criticality: Other (&gt;24h)</div>
           <div id="decision" class="decision review">
             <h3><span>Decision:</span> Review required</h3>
             <ul id="reasons"></ul>
           </div>
-
           <div id="weekend" class="alert-red" style="display:none;">
             <strong>Weekend escalation:</strong> If this task is urgently required to be scheduled over the weekend you must contact one of the following: <strong>Luke Wheeler 07843814856</strong>, <strong>Mark Fewtrell 07514730845</strong>.
           </div>
@@ -302,8 +232,6 @@
           </div>
 
           <h2 style="font-size:16px; margin-top:18px; margin-bottom:8px;">Task summary (email‑ready)</h2>
-
-          <!-- Sticky action bar for the outcome tools -->
           <div class="toolbar" style="position:sticky; top:0; border-radius:12px; margin:-16px -16px 8px; padding:8px 16px;">
             <strong>Outcome actions</strong>
             <span class="spacer"></span>
@@ -311,21 +239,548 @@
             <button class="btn btn-outline" id="download" type="button">Download .txt</button>
             <button class="btn btn-primary" id="gen_email" type="button" title="Generate email draft">Generate Email</button>
           </div>
-
-          <small class="muted">Opens in Outlook on the web; if too long, a concise email opens and the full text is copied to your clipboard automatically.</small>
+          <small class="muted">Opens in Outlook on the web; if too long, a concise email opens and the full formatted text is copied to your clipboard automatically.</small>
           <pre id="summary"></pre>
           <div class="footer">ROM will be notified automatically for missed deadlines; Risk & Compliance will support securing completion. If the task includes stock removal, recorded volumes will be returned to the requester after completion.</div>
         </div>
       </div>
-
     </div>
   </div>
 
-  <!-- Floating utility -->
   <div class="float-utility">
     <a href="#details" class="linklike" title="Back to top">Back to top</a>
   </div>
-<script src="ops-owa-email-patch.js">
+
+<script>
+// =============== Utilities ===============
+function isWhitbreadEmail(email){
+  const e = String(email || '').trim();
+  if(!e) return false;
+  // firstname.lastname@whitbread.com or .co.uk
+  const re = /^[A-Za-z]+\.[A-Za-z0-9\-]+@whitbread\.(com|co\.uk)$/i;
+  return re.test(e);
+}
+function anyActionSelected(){
+  return ['act_threat','act_remove','act_licence','act_allergy','act_pos','act_project','act_other']
+    .some(id => document.getElementById(id).checked);
+}
+function autoCriticality(){
+  const threat = document.getElementById('act_threat').checked;
+  const remove = document.getElementById('act_remove').checked;
+  const licence = document.getElementById('act_licence').checked;
+  const allergy = document.getElementById('act_allergy').checked;
+  const pos = document.getElementById('act_pos').checked;
+  const project = document.getElementById('act_project').checked;
+  const other = document.getElementById('act_other').checked;
+  if(threat) return 'critical';
+  if(remove || licence || allergy) return 'important';
+  if(pos || project || other) return 'other';
+  return 'other';
+}
+function selectedCriticality(){
+  if(document.getElementById('crit_critical').checked) return 'critical';
+  if(document.getElementById('crit_important').checked) return 'important';
+  if(document.getElementById('crit_other').checked) return 'other';
+  return 'auto';
+}
+function criticalityLabel(c){
+  if(c==='critical') return 'Critical (4 hours)';
+  if(c==='important') return 'Important (same day at 23:59)';
+  return 'Other (>24 hours)';
+}
+function hoursFor(c){
+  if(c==='critical') return 4;
+  if(c==='important') return 24; // referenced but not used for EOD calculation
+  return 72;
+}
+function updateCritPill(c){
+  const pill = document.getElementById('crit_pill');
+  pill.classList.remove('critical','important','other');
+  pill.classList.add(c==='critical'?'critical':(c==='important'?'important':'other'));
+  pill.textContent = `Criticality: ${criticalityLabel(c)}`;
+}
+function toLocalInputValue(date){
+  const pad = n => String(n).padStart(2,'0');
+  const y = date.getFullYear();
+  const m = pad(date.getMonth()+1);
+  const d = pad(date.getDate());
+  const h = pad(date.getHours());
+  const min = pad(date.getMinutes());
+  return `${y}-${m}-${d}T${h}:${min}`;
+}
+function fromLocalInputValue(val){
+  if(!val) return null;
+  const [dpart, tpart] = val.split('T');
+  const [y,m,d] = dpart.split('-').map(Number);
+  const [hh,mm] = tpart.split(':').map(Number);
+  return new Date(y, m-1, d, hh, mm);
+}
+function endOfDay(date){ return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 0, 0); }
+
+// =============== OWA compose helpers ===============
+function escapeHtml(text){
+  return String(text || '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function textToHtml(text){
+  return escapeHtml(text).replace(/(?:\r\n|\r|\n)/g,'<br>');
+}
+function normalizeRecipients(listStr){
+  return String(listStr||'')
+    .replace(/[\n\r]/g, ',')
+    .replace(/;/g, ',')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean)
+    .join(', ');
+}
+function buildOwaHref({to='',subject='',bodyText=''}) {
+  const parts = [];
+  if (to) parts.push('to=' + encodeURIComponent(normalizeRecipients(to)));
+  if (subject) parts.push('subject=' + encodeURIComponent(subject));
+  if (bodyText) parts.push('body=' + encodeURIComponent(bodyText));
+  return 'https://outlook.office.com/mail/deeplink/compose?' + parts.join('&');
+}
+async function copyFullToClipboard({ plain, html }){
+  try {
+    if (navigator.clipboard && window.ClipboardItem) {
+      const items = { 'text/plain': new Blob([plain], {type:'text/plain'}) };
+      if (html) items['text/html'] = new Blob([html], {type:'text/html'});
+      await navigator.clipboard.write([ new ClipboardItem(items) ]);
+      return true;
+    }
+  } catch(e) {}
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(plain);
+      return true;
+    }
+  } catch(e) {}
+  return false;
+}
+function tryOpenOwaThenFallback({ fullBody, shortBody, subject, to, fullHtml }) {
+  const MAX_SAFE = 11000; // generous limit
+  let href = buildOwaHref({ to, subject, bodyText: fullBody });
+  if (href.length <= MAX_SAFE) {
+    window.open(href, '_blank', 'noopener');
+    copyFullToClipboard({ plain: fullBody, html: fullHtml }).then(ok => {
+      if (ok) {
+        alert('Email opened in Outlook on the web.\n\nThe full, formatted summary (with bold section headers) is on your clipboard. Paste it into the email to keep formatting.');
+      }
+    });
+    return { mode:'owa-full' };
+  }
+  // Try concise version
+  href = buildOwaHref({ to, subject, bodyText: shortBody });
+  if (href.length <= MAX_SAFE) {
+    copyFullToClipboard({ plain: fullBody, html: fullHtml });
+    window.open(href, '_blank', 'noopener');
+    return { mode:'owa-short' };
+  }
+  return { mode:'too-long' };
+}
+function downloadEmlDraft({ to='', subject='', bodyHtml='' }){
+  const headers = [];
+  if (to) headers.push(`To: ${to}`);
+  headers.push(`Subject: ${subject}`);
+  headers.push('MIME-Version: 1.0');
+  headers.push('Content-Type: text/html; charset=UTF-8');
+  const eml = headers.join('\r\n') + '\r\n\r\n' + bodyHtml;
+  const blob = new Blob([eml], { type: 'message/rfc822' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const safe = (subject || 'draft').replace(/[^\w\- \[\]\(\)]+/g,' ').trim() || 'draft';
+  a.download = `${safe}.eml`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+let currentEmail = null;
+
+// =============== Core logic ===============
+function computeDeadline(){
+  const schedVal = document.getElementById('schedule_dt').value;
+  const override = document.getElementById('deadline_override').checked;
+  const critSel = selectedCriticality();
+  const crit = (critSel==='auto') ? autoCriticality() : critSel;
+  updateCritPill(crit);
+  const sched = fromLocalInputValue(schedVal);
+  if(!override && sched){
+    let deadline;
+    if(crit==='critical'){
+      deadline = new Date(sched.getTime() + 4*60*60*1000);
+    } else if(crit==='important'){
+      deadline = endOfDay(sched); // same day 23:59
+    } else {
+      deadline = new Date(sched.getTime() + hoursFor(crit)*60*60*1000);
+    }
+    document.getElementById('deadline_dt').value = toLocalInputValue(deadline);
+  }
+  const weekendEl = document.getElementById('weekend');
+  if(sched){
+    const day = sched.getDay(); // 0=Sun, 6=Sat
+    weekendEl.style.display = (day===0 || day===6) ? 'block' : 'none';
+  } else {
+    weekendEl.style.display = 'none';
+  }
+}
+function onCritChange(){ computeDeadline(); }
+function onScheduleChange(){ computeDeadline(); }
+function whoSelected(){
+  if(document.getElementById('who_admin').checked) return 'Site Admin (Site Managers)';
+  if(document.getElementById('who_checker').checked) return 'Compliance Checker (All other site roles)';
+  return null;
+}
+
+function generate(){
+  computeDeadline();
+  const title = document.getElementById('title').value.trim();
+  const reqName = document.getElementById('req_name').value.trim();
+  const reqEmail = document.getElementById('req_email').value.trim();
+  const desc = document.getElementById('desc').value.trim();
+  const purpose = document.getElementById('purpose').value.trim();
+  const outcomeText = document.getElementById('outcome_text').value.trim();
+  const audience = document.getElementById('audience').value.trim();
+  const dependencies = document.getElementById('dependencies').value.trim();
+  const essential = document.getElementById('chk_essential').checked;
+  const reinforce = document.getElementById('chk_reinforce').checked;
+  const escalation = document.getElementById('escalation').value.trim();
+  const policy = document.getElementById('policy').value;
+  const schedVal = document.getElementById('schedule_dt').value;
+  const deadlineVal = document.getElementById('deadline_dt').value;
+  const who = whoSelected();
+  const siteListAttach = document.getElementById('site_list_attach').checked;
+
+  let critSel = selectedCriticality();
+  let crit = (critSel==='auto') ? autoCriticality() : critSel;
+  updateCritPill(crit);
+  const sched = fromLocalInputValue(schedVal);
+  const deadline = fromLocalInputValue(deadlineVal);
+
+  // decision logic
+  let reasons = [];
+  let decision = 'review';
+  if(!essential){
+    decision = 'declined';
+    reasons.push('Core principle missing: not essential to record/track safety, compliance, or service quality.');
+  }
+  if(!reinforce){
+    decision = 'declined';
+    reasons.push('Core principle missing: task does not reinforce actions & expectations / duplicates comms details.');
+  }
+  if(!isWhitbreadEmail(escalation)){
+    if(decision!=='declined') decision = 'review';
+    reasons.push('Escalation contact must be a named Whitbread email.');
+  }
+  if(policy==='no'){
+    decision = 'declined';
+    reasons.push('Action not aligned to policy/standard procedure. Validate before sending.');
+  }
+  if(policy==='unsure'){
+    if(decision!=='declined') decision = 'review';
+    reasons.push('Policy alignment is unsure – validation required before sending.');
+  }
+  if(crit==='other'){
+    if(decision!=='declined') decision = 'review';
+    reasons.push('"Other" criticality (>24h) requires approval for task applicability and lead time.');
+  }
+  if(sched && deadline){
+    const diffHrs = Math.round((deadline.getTime()-sched.getTime())/3600000);
+    if(crit==='critical'){
+      if(diffHrs>4){ reasons.push('Deadline is longer than recommended for selected criticality.'); }
+      if(diffHrs<4){ if(decision!=='declined') decision = 'review'; reasons.push('Deadline shorter than recommended – ensure urgency is justified.'); }
+    } else if(crit==='important'){
+      const eod = endOfDay(sched);
+      if(deadline.getTime() > eod.getTime()){
+        reasons.push('Deadline is later than the end-of-day default for Important.');
+      }
+    }
+  }
+  if(decision!=='declined' && essential && reinforce && isWhitbreadEmail(escalation) && policy==='yes' && (crit==='critical' || crit==='important')){
+    decision = 'approved';
+  }
+
+  // Missing list
+  const missing = [];
+  if(!title) missing.push('Title');
+  if(!reqName) missing.push('Requester name');
+  if(!reqEmail){
+    missing.push('Requester email');
+  } else {
+    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(reqEmail);
+    if(!emailValid) missing.push('Requester email (invalid format)');
+  }
+  if(!isWhitbreadEmail(escalation)) missing.push('Escalation contact (named Whitbread email)');
+  if(!anyActionSelected()) missing.push('Select at least one action type');
+  if(!essential) missing.push('Confirm essential to record/track safety/compliance/service quality');
+  if(!reinforce) missing.push('Confirm task reinforces actions & expectations (no duplication)');
+  if(!sched) missing.push('Schedule date/time');
+  if(!deadline) missing.push('Deadline date/time');
+  if(policy==='unsure') missing.push('Validate policy alignment (currently Unsure)');
+  if(!who) missing.push('Select who can complete the task (Site Admin / Compliance Checker)');
+  if(!siteListAttach) missing.push('Confirm a site list will be attached to the request email');
+  if(!desc) missing.push('Task wording (including actions)');
+  if(!purpose) missing.push('Purpose of the request');
+  if(!outcomeText) missing.push('Desired outcome / what success looks like');
+  if(!audience) missing.push('Impacted audience / scope');
+  if(!dependencies) missing.push('Dependencies or prerequisites (if any)');
+
+  // Render Missing UI
+  const missingEl = document.getElementById('missing');
+  missingEl.innerHTML = missing.length ? missing.map(m=>`<li>${m}</li>`).join('') : '<li>None – all core details present.</li>';
+  const missingWrap = document.getElementById('missing_wrap');
+  const missingTitle = document.getElementById('missing_title');
+  missingTitle.textContent = `Missing information / to confirm${missing.length ? ' ('+missing.length+')' : ''}`;
+  missingWrap.classList.remove('flash'); void missingWrap.offsetWidth; missingWrap.classList.add('flash');
+
+  // Decision box
+  const decisionBox = document.getElementById('decision');
+  decisionBox.classList.remove('approved','review','declined');
+  decisionBox.classList.add(decision);
+  decisionBox.querySelector('h3').innerHTML = `<span>Decision:</span> ${decision==='approved'?'Approved to go in Co Pilot':(decision==='declined'?'Declined – revise and validate':'Review required – seek approval/validation')}`;
+  const reasonsEl = document.getElementById('reasons');
+  reasonsEl.innerHTML = reasons.map(r=>`<li>${r}</li>`).join('');
+
+  const fmt =(d)=> d? d.toLocaleString('en-GB', {dateStyle:'medium', timeStyle:'short'}) : '[not set]';
+  const delta = (sched && deadline) ? ` (Δ ${Math.round((deadline.getTime()-sched.getTime())/3600000)}h)` : '';
+
+  // Action labels
+  const actionLines = [];
+  ['act_threat','act_remove','act_licence','act_allergy','act_pos','act_project','act_other'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el.checked){
+      const label = el.parentElement.querySelector('span').textContent.trim();
+      actionLines.push(`- ${label}`);
+    }
+  });
+  if(actionLines.length===0){ actionLines.push('- [Select at least one action type]'); }
+
+  // Build subject and recipients
+  let subject = '';
+  let to = '';
+  let cc = '';
+  if(decision==='approved' || decision==='review'){
+    subject = `Co Pilot Ops Comms Task Request – ${title || '[Title]'} (${decision==='approved'?'Approved':'Approval Required'})`;
+    to = (decision==='approved' ? 'copilot.project@whitbread.com' : 'gillian.klarin@whitbread.com');
+    cc = 'mark.fewtrell@whitbread.com, luke.wheeler@whitbread.com';
+  }
+
+  // Build plain summary lines (for on-page preview and OWA body)
+  const lines = [];
+  if(decision==='approved' || decision==='review'){
+    const allTo = [to, cc].filter(Boolean).join(', ');
+    const intro = (decision==='approved')
+      ? 'Below is a summary of an approved request for an Ops Comms'
+      : 'I would like to request approval for the below task summary to be considered as an Ops Comms.';
+    lines.push(`Subject: ${subject}`);
+    lines.push(`To: ${allTo}`);
+    lines.push('');
+    lines.push('Hello,');
+    lines.push('');
+    lines.push(intro);
+    lines.push('');
+    lines.push('Summary of request');
+    lines.push(`Title: ${title || '[Enter title]'}`);
+    lines.push(`Requester: ${reqName || '[Name]'} (${reqEmail || '[Email]'})`);
+    lines.push(`Escalation contact: ${escalation || '[Named Whitbread email]'}`);
+    lines.push(`Who can complete: ${who || '[Select role]'}`);
+    lines.push(`Site list attached: ${siteListAttach ? 'Yes' : 'No'}`);
+    lines.push('');
+    lines.push('Purpose & objectives');
+    lines.push(`Purpose: ${purpose || '[Explain why this is needed]'}`);
+    lines.push(`Outcome (what success looks like): ${outcomeText || '[Define the expected end state]'}`);
+    lines.push(`Impacted audience / scope: ${audience || '[Who is affected]'}`);
+    lines.push(`Dependencies / prerequisites: ${dependencies || '[List any dependencies or approvals]'}`);
+    lines.push('');
+    lines.push('Action type(s):');
+    lines.push(...actionLines);
+    lines.push('');
+    lines.push(`Criticality: ${criticalityLabel(crit)}`);
+    lines.push(`Schedule: ${fmt(sched)}  Deadline: ${fmt(deadline)}${delta}`);
+    lines.push('');
+    lines.push('Decision & rationale');
+    lines.push(`${decision==='approved'?'Approved to go in Co Pilot': 'Approval required – seek validation'}`);
+    if(reasons.length){
+      lines.push('Reasons:');
+      reasons.forEach(r=>lines.push(`- ${r}`));
+    } else {
+      lines.push('Reasons: Meets core principles and policy.');
+    }
+    lines.push('');
+    lines.push('Missing information / to confirm');
+    const missingListForSummary = missing.length ? missing : ['None – all core details present.'];
+    missingListForSummary.forEach(m=>lines.push(`- ${m}`));
+    lines.push('');
+    lines.push('Task wording (including actions)');
+    lines.push(desc || '[Provide the task wording and actions]');
+  } else {
+    lines.push('Decision: Declined – revise and validate');
+    if(reasons.length){ lines.push('Reasons:'); reasons.forEach(r=>lines.push(`- ${r}`)); }
+    lines.push('');
+    lines.push('Missing information / to confirm');
+    const missingListForSummary = missing.length ? missing : ['None – all core details present.'];
+    missingListForSummary.forEach(m=>lines.push(`- ${m}`));
+    lines.push('');
+    lines.push('Purpose & objectives');
+    lines.push(`Purpose: ${purpose || '[Explain why this is needed]'}`);
+    lines.push(`Outcome (what success looks like): ${outcomeText || '[Define the expected end state]'}`);
+    lines.push(`Impacted audience / scope: ${audience || '[Who is affected]'}`);
+    lines.push(`Dependencies / prerequisites: ${dependencies || '[List any dependencies or approvals]'}`);
+    lines.push('');
+    lines.push('Task wording (including actions)');
+    lines.push(desc || '[Provide the task wording and actions]');
+  }
+
+  // Show the summary
+  document.getElementById('summary').textContent = lines.join('\n');
+
+  // Build HTML version with bold section headers (for clipboard / .eml fallback)
+  function section(titleHtml, innerHtml){
+    return `<p><strong>${titleHtml}</strong></p>\n${innerHtml}`;
+  }
+  function list(items){ return `<ul>` + items.map(x=>`<li>${escapeHtml(x)}</li>`).join('') + `</ul>`; }
+  const htmlParts = [];
+  if(decision==='approved' || decision==='review'){
+    const intro = (decision==='approved')
+      ? 'Below is a summary of an approved request for an Ops Comms'
+      : 'I would like to request approval for the below task summary to be considered as an Ops Comms.';
+    htmlParts.push('<p>Hello,</p>');
+    htmlParts.push(`<p>${escapeHtml(intro)}.</p>`);
+    htmlParts.push(section('Summary of request',
+      list([
+        `Title: ${title || '[Enter title]'}`,
+        `Requester: ${reqName || '[Name]'} (${reqEmail || '[Email]'})`,
+        `Escalation contact: ${escalation || '[Named Whitbread email]'}`,
+        `Who can complete: ${who || '[Select role]'}`,
+        `Site list attached: ${siteListAttach ? 'Yes' : 'No'}`
+      ])
+    ));
+    htmlParts.push(section('Purpose &amp; objectives',
+      list([
+        `Purpose: ${purpose || '[Explain why this is needed]'}`,
+        `Outcome (what success looks like): ${outcomeText || '[Define the expected end state]'}`,
+        `Impacted audience / scope: ${audience || '[Who is affected]'}`,
+        `Dependencies / prerequisites: ${dependencies || '[List any dependencies or approvals]'}`
+      ])
+    ));
+    htmlParts.push(section('Action type(s)', list(actionLines)));
+    htmlParts.push(section('Timing & criticality', list([
+      `Criticality: ${criticalityLabel(crit)}`,
+      `Schedule: ${fmt(sched)}  Deadline: ${fmt(deadline)}${delta}`
+    ])));
+    const decInner = [];
+    decInner.push(escapeHtml(decision==='approved'?'Approved to go in Co Pilot': 'Approval required – seek validation'));
+    if(reasons.length){ decInner.push('<p><strong>Reasons:</strong></p>' + list(reasons)); }
+    htmlParts.push(section('Decision & rationale', decInner.join('\n')));
+    const missItems = missing.length ? missing : ['None – all core details present.'];
+    htmlParts.push(section('Missing information / to confirm', list(missItems)));
+    htmlParts.push(section('Task wording (including actions)', `<div style="white-space:pre-wrap">${escapeHtml(desc || '[Provide the task wording and actions]')}</div>`));
+  } else {
+    htmlParts.push(section('Decision', 'Declined – revise and validate'));
+    if(reasons.length){ htmlParts.push('<p><strong>Reasons:</strong></p>' + list(reasons)); }
+    const missItems = missing.length ? missing : ['None – all core details present.'];
+    htmlParts.push(section('Missing information / to confirm', list(missItems)));
+    htmlParts.push(section('Purpose &amp; objectives', list([
+      `Purpose: ${purpose || '[Explain why this is needed]'}`,
+      `Outcome (what success looks like): ${outcomeText || '[Define the expected end state]'}`,
+      `Impacted audience / scope: ${audience || '[Who is affected]'}`,
+      `Dependencies / prerequisites: ${dependencies || '[List any dependencies or approvals]'}`
+    ])));
+    htmlParts.push(section('Task wording (including actions)', `<div style="white-space:pre-wrap">${escapeHtml(desc || '[Provide the task wording and actions]')}</div>`));
+  }
+  const htmlBody = htmlParts.join('\n');
+
+  // Prepare email compose data
+  const btn = document.getElementById('gen_email');
+  if (decision === 'declined') {
+    currentEmail = null;
+    if (btn) { btn.disabled = true; btn.title = 'Decision is Declined – no email generated'; }
+  } else {
+    const allTo = [to, cc].filter(Boolean).join(', ');
+    const fullBody = lines.slice(2).join('\r\n'); // CRLF for OWA
+    const idxMissing = lines.findIndex(l => l.trim().toLowerCase().startsWith('missing information'));
+    const shortSliceEnd = idxMissing > -1 ? idxMissing : Math.min(lines.length, 40);
+    const shortBodyCore = lines.slice(2, shortSliceEnd);
+    const shortBody = [
+      ...shortBodyCore,
+      '',
+      '—',
+      'Note: Full summary has been copied to your clipboard. Paste it here if you need the full details with bold section headers.'
+    ].join('\r\n');
+
+    currentEmail = { to: allTo, subject, fullBody, shortBody, htmlBody };
+    if (btn) { btn.disabled = false; btn.title = 'Generate email draft'; }
+  }
+
+  // UX: scroll & flash
+  document.getElementById('outcome').scrollIntoView({ behavior:'smooth', block:'start' });
+  const inner = document.getElementById('outcome_inner');
+  inner.classList.remove('flash'); void inner.offsetWidth; inner.classList.add('flash');
+}
+
+function copySummary(){
+  const txt = document.getElementById('summary').textContent;
+  navigator.clipboard.writeText(txt).then(()=>{ alert('Summary copied to clipboard'); })
+    .catch(()=>{ alert('Copy failed. Select and copy manually.'); });
+}
+function downloadTxt(){
+  const blob = new Blob([document.getElementById('summary').textContent], {type: 'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'cp_task_decision_summary.txt';
+  a.click();
+}
+function resetForm(){
+  document.querySelectorAll('input, textarea, select').forEach(el=>{
+    if(el.type==='checkbox'){ el.checked=false; }
+    else if(el.type==='radio'){ el.checked=false; }
+    else if(el.tagName==='SELECT'){ el.selectedIndex=0; }
+    else{ el.value=''; }
+  });
+  document.getElementById('crit_auto').checked = true;
+  updateCritPill('other');
+  document.getElementById('decision').className = 'decision review';
+  document.getElementById('decision').querySelector('h3').innerHTML = '<span>Decision:</span> Review required';
+  document.getElementById('reasons').innerHTML = '';
+  document.getElementById('missing').innerHTML = '';
+  document.getElementById('missing_title').textContent = 'Missing information / to confirm';
+  document.getElementById('summary').textContent='';
+  document.getElementById('weekend').style.display = 'none';
+  const btn = document.getElementById('gen_email');
+  if (btn) { btn.disabled = true; btn.title = 'Generate a decision first'; }
+}
+
+// =============== Events ===============
+document.getElementById('generate').addEventListener('click', generate);
+document.getElementById('generate_bottom').addEventListener('click', generate);
+document.getElementById('copy').addEventListener('click', copySummary);
+document.getElementById('download').addEventListener('click', downloadTxt);
+document.getElementById('reset').addEventListener('click', resetForm);
+document.getElementById('deadline_override').addEventListener('change', (e)=>{
+  document.getElementById('deadline_dt').readOnly = !e.target.checked;
+  if(!e.target.checked){ computeDeadline(); }
+});
+['crit_auto','crit_critical','crit_important','crit_other'].forEach(id=>{
+  document.getElementById(id).addEventListener('change', onCritChange);
+});
+document.getElementById('schedule_dt').addEventListener('change', onScheduleChange);
+
+// Generate Email flow with OWA-first, clipboard HTML, then .eml fallback
+document.getElementById('gen_email').addEventListener('click', ()=>{
+  if (!currentEmail) { alert('No email is available for this decision.'); return; }
+  const { to, subject, fullBody, shortBody, htmlBody } = currentEmail;
+  const result = tryOpenOwaThenFallback({ fullBody, shortBody, subject, to, fullHtml: htmlBody });
+  if (result.mode === 'too-long') {
+    downloadEmlDraft({ to, subject, bodyHtml: htmlBody || textToHtml(fullBody) });
+    alert('The email content was too long for Outlook on the web, so a draft .eml was downloaded instead (with bold headers).');
+  }
+});
+
+// Initial state
+updateCritPill('other');
+document.getElementById('deadline_dt').readOnly = true;
+const initBtn = document.getElementById('gen_email');
+if (initBtn) { initBtn.disabled = true; initBtn.title = 'Generate a decision first'; }
 </script>
 </body>
 </html>
